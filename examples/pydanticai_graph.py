@@ -1,0 +1,139 @@
+from __future__ import annotations as _annotations
+
+import asyncio
+import os
+from dataclasses import dataclass, field
+
+from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
+from dotenv import load_dotenv
+from groq import BaseModel
+from openai import AsyncOpenAI
+from pydantic_ai import Agent, format_as_xml
+from pydantic_ai.messages import ModelMessage
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
+from pydantic_graph import (
+    BaseNode,
+    End,
+    Graph,
+    GraphRunContext,
+)
+
+# Setup the OpenAI client to use Azure OpenAI
+load_dotenv(override=True)
+API_HOST = os.getenv("API_HOST", "azure")
+
+async_credential = None
+if API_HOST == "azure":
+    async_credential = DefaultAzureCredential()
+    token_provider = get_bearer_token_provider(async_credential, "https://cognitiveservices.azure.com/.default")
+    client = AsyncOpenAI(
+        base_url=os.environ["AZURE_OPENAI_ENDPOINT"] + "/openai/v1",
+        api_key=token_provider,
+    )
+    model = OpenAIChatModel(os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"], provider=OpenAIProvider(openai_client=client))
+elif API_HOST == "ollama":
+    client = AsyncOpenAI(base_url=os.environ.get("OLLAMA_ENDPOINT", "http://localhost:11434/v1"), api_key="none")
+    model = OpenAIChatModel(os.environ["OLLAMA_MODEL"], provider=OpenAIProvider(openai_client=client))
+else:
+    client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    model = OpenAIChatModel(os.environ.get("OPENAI_MODEL", "gpt-4o"), provider=OpenAIProvider(openai_client=client))
+
+"""
+Agent definitions
+"""
+
+ask_agent = Agent(model, output_type=str)
+
+
+class EvaluationResult(BaseModel, use_attribute_docstrings=True):
+    correct: bool
+    """Whether the answer is correct."""
+    comment: str
+    """Comment on the answer, reprimand the user if the answer is wrong."""
+
+
+evaluate_agent = Agent(
+    model,
+    output_type=EvaluationResult,
+    system_prompt="Given a question and answer, evaluate if the answer is correct.",
+)
+
+"""
+Graph state and nodes
+"""
+
+
+@dataclass
+class QuestionState:
+    question: str | None = None
+    ask_agent_messages: list[ModelMessage] = field(default_factory=list)
+    evaluate_agent_messages: list[ModelMessage] = field(default_factory=list)
+
+
+@dataclass
+class Ask(BaseNode[QuestionState]):
+    async def run(self, ctx: GraphRunContext[QuestionState]) -> Answer:
+        result = await ask_agent.run(
+            "Ask a simple question with a single correct answer.",
+            message_history=ctx.state.ask_agent_messages,
+        )
+        ctx.state.ask_agent_messages += result.all_messages()
+        ctx.state.question = result.output
+        return Answer(result.output)
+
+
+@dataclass
+class Answer(BaseNode[QuestionState]):
+    question: str
+
+    async def run(self, ctx: GraphRunContext[QuestionState]) -> Evaluate:
+        answer = input(f"{self.question}: ")
+        return Evaluate(answer)
+
+
+@dataclass
+class Evaluate(BaseNode[QuestionState, None, str]):
+    answer: str
+
+    async def run(
+        self,
+        ctx: GraphRunContext[QuestionState],
+    ) -> End[str] | Reprimand:
+        assert ctx.state.question is not None
+        result = await evaluate_agent.run(
+            format_as_xml({"question": ctx.state.question, "answer": self.answer}),
+            message_history=ctx.state.evaluate_agent_messages,
+        )
+        ctx.state.evaluate_agent_messages += result.all_messages()
+        if result.output.correct:
+            return End(result.output.comment)
+        else:
+            return Reprimand(result.output.comment)
+
+
+@dataclass
+class Reprimand(BaseNode[QuestionState]):
+    comment: str
+
+    async def run(self, ctx: GraphRunContext[QuestionState]) -> Ask:
+        print(f"Comment: {self.comment}")
+        ctx.state.question = None
+        return Ask()
+
+
+question_graph = Graph(nodes=(Ask, Answer, Evaluate, Reprimand), state_type=QuestionState)
+
+
+async def main():
+    state = QuestionState()
+    node = Ask()
+    end = await question_graph.run(node, state=state)
+    print("END:", end.output)
+
+    if async_credential:
+        await async_credential.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

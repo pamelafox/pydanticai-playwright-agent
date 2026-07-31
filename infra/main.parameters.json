@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "principalId": {
+      "value": "${AZURE_PRINCIPAL_ID}"
+    },
+    "runningOnGitHub": {
+      "value": "${GITHUB_ACTIONS}"
+    },
+    "gptModelName": {
+      "value": "${AZURE_GPT_MODEL_NAME}"
+    },
+    "gptModelVersion": {
+      "value": "${AZURE_GPT_MODEL_VERSION}"
+    },
+    "gptDeploymentName": {
+      "value": "${AZURE_GPT_DEPLOYMENT_NAME}"
+    },
+    "gptDeploymentCapacity": {
+      "value": "${AZURE_GPT_DEPLOYMENT_CAPACITY}"
+    }
+  }
+}
