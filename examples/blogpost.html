@@ -54,4 +54,103 @@ like Kimi-2.7. The URL looks like "https://AZURE_OPENAI_SERVICE_NAME.openai.azur
     and is still the best option for E2E tests today.
     But when the Playwright MCP server was released, it also became the most common way to give a coding agent access to websites.
     When you yourself are developing a website, it's a great way to give the agent access to browse the website, do manual QA, and iterate on design improvements.
-    We can also use Playwright to access other websites, 
+    We can also use Playwright to access other websites, as long as the website's terms permit programmatic access.
+<p>
+
+<p>To integrate Pydantic-AI with Playwright, we bring in the <code>PlaywrightBrowser</code> capability from the <a target="_blank" href="https://pydantic.dev/docs/ai/harness/"><code>pydantic-ai-harness</code></a>,
+    a library of additional capabilities for Pydantic-AI agents.</p>
+
+<pre>
+from pydantic_ai_harness.playwright import PlaywrightBrowser
+
+browser = PlaywrightBrowser(
+    allowed_domains=[website_url],
+    block_private_addresses=True,
+    headless=False,
+    timeout_ms=30_000,
+    screenshot_on_navigate=False,
+    auto_install_chromium=False
+)
+</pre>
+
+<p>Let's review those parameters:</p>
+<ul>
+    <li><code>allowed_domains</code>: Restricts top-level browser navigation to the specified hostnames.
+        This prevents the agent from navigating to unexpected websites and keep its scenario more targeted.
+    <li><code>block_private_addresses</code>: By default, this option is set to <code>True</code> to prevent
+    navigation to localhost and private or reserved IP addresses, even when
+    that address appears in <code>allowed_domains</code>. Set it to <code>false</code>
+    only when the agent needs explicit access to a trusted locally deployed application.
+    <li><code>headless</code>: By default, Playwright will run in headless mode, which means that the browser window is not visible.
+    When developing, I often set this to <code>False</code>, since it can be helpful to actually watch Playwright control the browser.
+    <li><code>max_content_tokens</code>: This option limits the amount of webpage text returned to the agent.
+    This defaults to 4000 tokens, so I increased it to 30,000 tokens to allow for longer webpages.
+    Keep in mind that the amount of content returned will increase the usage of the context window,
+    affecting both performance and latency of subsequent LLM calls.
+    <li><code>timeout_ms</code>: Sets the default timeout for navigation and browser actions to 30 seconds (the default value).
+        You may want to increase for websites with slow-responding interfaces, or decrease for more efficient agentic navigation.
+    <li><code>screenshot_on_navigate</code>: Controls whether Playwright takes a screenshot after every navigation and attaches to the agent session.
+        This defaults to <code>False</code>, since screenshots can bloat the context window, but you may want to enable it for
+        more design-heavy workflows or for human auditing purposes.
+    <li><code>auto_install_chromium</code>: When set to <code>True</code>, the library itself will download the binary for the Chromium browser.
+        This is off by default, so you must explicitly install chromium before running.
+        Typically you would install chromium in your environments manually so that you can properly cache it across runs, like in CI/CD.
+</ul>
+
+<h2>Creating the Pydantic-AI agent</h2>
+
+<p>Now that we have the Foundry model connection and Playwright browser configured,
+    we can construct a Pydantic-AI agent that combines the model and capabilities together.
+    We also include the <code>FileSystem</code> capability, restricted to an outputs folder,
+    so that the agent can easily write out its Markdown reports.
+</p>
+
+<pre>
+agent = Agent(
+  model=model,
+  capabilities=[browser, FileSystem(root_dir=OUTPUT_ROOT)],
+  system_prompt="You are a careful manual QA agent testing a website that the user owns...",
+  max_concurrency=1,
+)
+</pre>
+
+<p>Then we run the agent, asking it to do a manual QA pass on the specified website:</p>
+
+<pre>
+result = await agent.run(
+    f"Perform a manual QA pass on {url}. Load this URL first, make a testing plan, and investigate "
+    "the highest-value usability risks and functional bugs you can safely reproduce. "
+    "Write the required report to outputs/qa-report.md.",
+)
+</pre>
+
+<h2>Instrumenting OpenTelemetry for inspecting the browsing activity</h2>
+
+<p>We can inspect the generated report to see that the agent successfully completed the task,
+    but we usually want to dig deeper: What pages did it browse? What commands did it run on those pages?
+    How many tokens were used during the process?
+</p>
+
+<p>Fortunately, we can instrument any Pydantic-AI agent with OpenTelemetry, exporting the traces
+    to any OpenTelemetry-compliant provider, like Pydantic Logfire or Azure App Insights.</p>
+
+<p>Logfire:</p>
+
+<pre>
+configured_logfire = logfire.configure(
+    send_to_logfire="if-token-present",
+    token=os.getenv("LOGFIRE_TOKEN"),
+    service_name="pydanticai-playwright-qa",
+    console=False,
+    additional_span_processors=[SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file))],
+)
+</pre>
+
+<pre>configured_logfire.instrument_openai(client)
+configured_logfire.instrument_pydantic_ai(agent, include_content=True)
+</pre>
+
+<p>After running the agents, we can browse through the traces. Here's what it looks 
+
+
+

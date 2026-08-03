@@ -125,13 +125,13 @@ This project includes infrastructure as code (IaC) to provision an Azure OpenAI 
     azd down
     ```
 
-## Running the Playwright deep-research example
+## Running the Playwright manual QA example
 
 The Playwright example uses Azure OpenAI, the pinned Pydantic AI Harness browser capability, and a
-filesystem rooted at `outputs/`. It currently permits the Linux Foundation MCPCon event site, plus
-`x.com`, `twitter.com`, and `linkedin.com` for public speaker profiles;
-the allowlist is operator-controlled and is not taken from the research prompt. The agent is
-read-only and records source URLs in the requested artifacts.
+filesystem rooted at `outputs/`. It is a read-only manual QA agent for websites you own: it loads the
+URL you provide, makes a test plan, explores safe user journeys, and writes usability and bug findings
+to `outputs/qa-report.md`. The host allowlist is derived from the supplied URL, and the agent does not
+follow links to other domains.
 
 After Azure authentication and configuration, install the Python and browser dependencies:
 
@@ -143,30 +143,30 @@ uv run playwright install chromium
 Set `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_CHAT_DEPLOYMENT` in `.env`, then run:
 
 ```shell
-uv run python examples/pydanticai_playwright.py
+uv run python examples/pydanticai_playwright.py https://www.pamelafox.org
 ```
 
-LinkedIn authentication is optional. Without an auth file, the example browses LinkedIn
-anonymously and reports unavailable profile information as `unknown`. To create a site-scoped
-Playwright storage state, log in interactively once with:
+Authenticated QA is optional. To create a site-scoped Playwright storage state, log in interactively
+once with:
 
 ```shell
 mkdir -p playwright/.auth
-uv run playwright codegen https://www.linkedin.com/ --save-storage=playwright/.auth/linkedin.json
+uv run playwright codegen https://your-owned-site.example/ --save-storage=playwright/.auth/site.json
 ```
 
-Close the browser after logging in, then run the example normally. The auth file contains cookies
-and local storage that can impersonate the account, so it is gitignored, must not be shared, and
-should be deleted when the session expires. Do not use a real Chrome profile or browser-extension
-attachment. The example loads this file only when it exists.
+Close the browser after logging in, then pass the state file explicitly:
 
-For example, enter:
-
-```text
-Search the Linux Foundation MCPCon schedule for MCP talks, open each clickable speaker detail page, capture its LinkedIn and X links, check those public profiles for explicit Bay Area, California location evidence, and write speakers.md as a cited Markdown table.
+```shell
+uv run python examples/pydanticai_playwright.py https://your-owned-site.example/ \
+    --session-state playwright/.auth/site.json
 ```
 
-Research files are written below `outputs/`; absolute paths and paths outside that directory are
+The auth file contains cookies and local storage that can impersonate the account, so it is
+gitignored, must not be shared, and should be deleted when the session expires. Do not use a real
+Chrome profile or browser-extension attachment. The agent will not submit forms, send messages,
+change settings, or perform other consequential actions.
+
+Reports and traces are written below `outputs/`; absolute paths and paths outside that directory are
 blocked by the Harness `FileSystem` capability. The browser dependency is pinned to Harness commit
 `730130f3322936f0396afa933b2f4184fc0028bf` (PR #420 / `backport/browser`) until a release is available.
 
@@ -178,7 +178,7 @@ viewer or commands such as `jq` after a run.
 For accessibility-tree debugging, enable opt-in snapshot logging before a run:
 
 ```shell
-DEBUG_BROWSER_SNAPSHOTS=1 uv run python examples/pydanticai_playwright.py
+DEBUG_BROWSER_SNAPSHOTS=1 uv run python examples/pydanticai_playwright.py https://www.pamelafox.org
 ```
 
 Snapshots are saved as JSONL in `outputs/debug/snapshots.jsonl`. They can contain page text,
