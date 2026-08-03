@@ -1,7 +1,7 @@
 <!--
 ---
-name: Python AI Agent Frameworks Demos
-description: Collection of Python examples for popular AI agent frameworks using Azure OpenAI.
+name: PydanticAI Python Demos
+description: Collection of PydanticAI examples using Azure OpenAI.
 languages:
 - python
 products:
@@ -11,12 +11,12 @@ page_type: sample
 urlFragment: python-ai-agent-frameworks-demos
 ---
 -->
-# Python AI Agent Frameworks Demos
+# PydanticAI Python Demos
 
 [![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://codespaces.new/Azure-Samples/python-ai-agent-frameworks-demos)
 [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/Azure-Samples/python-ai-agent-frameworks-demos)
 
-This repository provides examples of many popular Python AI agent frameworks.
+This repository provides examples of Python AI agents built with PydanticAI.
 
 * [Getting started](#getting-started)
   * [GitHub Codespaces](#github-codespaces)
@@ -94,7 +94,7 @@ These examples can be run with Azure OpenAI account, OpenAI.com, or local Ollama
 
 To run the examples using models from Azure OpenAI, you need to provision the Azure AI resources, which will incur costs.
 
-This project includes infrastructure as code (IaC) to provision Azure OpenAI deployments of "gpt-5.4" and "text-embedding-3-large". The IaC is defined in the `infra` directory and uses the Azure Developer CLI to provision the resources.
+This project includes infrastructure as code (IaC) to provision an Azure OpenAI deployment of "gpt-5.4". The IaC is defined in the `infra` directory and uses the Azure Developer CLI to provision the resource.
 
 1. Make sure the [Azure Developer CLI (azd)](https://aka.ms/install-azd) is installed.
 
@@ -124,6 +124,65 @@ This project includes infrastructure as code (IaC) to provision Azure OpenAI dep
     ```shell
     azd down
     ```
+
+## Running the Playwright deep-research example
+
+The Playwright example uses Azure OpenAI, the pinned Pydantic AI Harness browser capability, and a
+filesystem rooted at `outputs/`. It currently permits the Linux Foundation MCPCon event site, plus
+`x.com`, `twitter.com`, and `linkedin.com` for public speaker profiles;
+the allowlist is operator-controlled and is not taken from the research prompt. The agent is
+read-only and records source URLs in the requested artifacts.
+
+After Azure authentication and configuration, install the Python and browser dependencies:
+
+```shell
+uv sync
+uv run playwright install chromium
+```
+
+Set `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_CHAT_DEPLOYMENT` in `.env`, then run:
+
+```shell
+uv run python examples/pydanticai_playwright.py
+```
+
+LinkedIn authentication is optional. Without an auth file, the example browses LinkedIn
+anonymously and reports unavailable profile information as `unknown`. To create a site-scoped
+Playwright storage state, log in interactively once with:
+
+```shell
+mkdir -p playwright/.auth
+uv run playwright codegen https://www.linkedin.com/ --save-storage=playwright/.auth/linkedin.json
+```
+
+Close the browser after logging in, then run the example normally. The auth file contains cookies
+and local storage that can impersonate the account, so it is gitignored, must not be shared, and
+should be deleted when the session expires. Do not use a real Chrome profile or browser-extension
+attachment. The example loads this file only when it exists.
+
+For example, enter:
+
+```text
+Search the Linux Foundation MCPCon schedule for MCP talks, open each clickable speaker detail page, capture its LinkedIn and X links, check those public profiles for explicit Bay Area, California location evidence, and write speakers.md as a cited Markdown table.
+```
+
+Research files are written below `outputs/`; absolute paths and paths outside that directory are
+blocked by the Harness `FileSystem` capability. The browser dependency is pinned to Harness commit
+`730130f3322936f0396afa933b2f4184fc0028bf` (PR #420 / `backport/browser`) until a release is available.
+
+The example also writes local OpenTelemetry JSON spans to `outputs/traces.jsonl`. Cloud Logfire
+export is disabled. The trace file includes model prompts/results and tool output to help diagnose
+slow browsing, so treat it as sensitive local data and do not share it. Inspect it with a JSONL
+viewer or commands such as `jq` after a run.
+
+For accessibility-tree debugging, enable opt-in snapshot logging before a run:
+
+```shell
+DEBUG_BROWSER_SNAPSHOTS=1 uv run python examples/pydanticai_playwright.py
+```
+
+Snapshots are saved as JSONL in `outputs/debug/snapshots.jsonl`. They can contain page text,
+links, and other sensitive content, so inspect and delete them locally when finished.
 
 ## Using OpenAI.com models
 
@@ -168,67 +227,19 @@ This project includes infrastructure as code (IaC) to provision Azure OpenAI dep
 
 ## Running the Python examples
 
-You can run the examples in this repository by executing the scripts in the `examples` directory. Each script demonstrates a different AI agent pattern or framework.
-
-### Microsoft Agent Framework
-
-| Example | Description |
-| ------- | ----------- |
-| [agentframework_basic.py](examples/agentframework_basic.py) | Uses Agent Framework to build a basic informational agent. |
-| [agentframework_tool.py](examples/agentframework_tool.py) | Uses Agent Framework to build an agent with a single weather tool. |
-| [agentframework_tools.py](examples/agentframework_tools.py) | Uses Agent Framework to build a weekend planning agent with multiple tools. |
-| [agentframework_supervisor.py](examples/agentframework_supervisor.py) | Uses Agent Framework with a supervisor orchestrating activity and recipe sub-agents. |
-| [agentframework_magenticone.py](examples/agentframework_magenticone.py) | Uses Agent Framework to build a MagenticOne agent. |
-| [agentframework_workflow.py](examples/agentframework_workflow.py) | Uses Agent Framework to build a workflow-based agent. |
-
-### Langchain v1 and LangGraph
-
-| Example | Description |
-| ------- | ----------- |
-| [langchainv1_basic.py](examples/langchainv1_basic.py) | Uses LangChain v1 to build a basic informational agent. |
-| [langchainv1_tool.py](examples/langchainv1_tool.py) | Uses LangChain v1 to build an agent with a single weather tool. |
-| [langchainv1_tools.py](examples/langchainv1_tools.py) | Uses LangChain v1 to build a weekend planning agent with multiple tools. |
-| [langchainv1_supervisor.py](examples/langchainv1_supervisor.py) | Uses LangChain v1 with a supervisor orchestrating activity and recipe sub-agents. |
-| [langchainv1_quickstart.py](examples/langchainv1_quickstart.py) | Uses LangChain v1 to build an assistant with tool calling, structured output, and memory. Based off official Quickstart docs. |
-| [langchainv1_mcp_github.py](examples/langchainv1_mcp_github.py) | Uses Langchain v1 agent with GitHub MCP server to triage repository issues. |
-| [langchainv1_mcp_http.py](examples/langchainv1_mcp_http.py) | Uses Langchain v1 agent with tools from local MCP HTTP server. |
-| [langgraph_agent.py](examples/langgraph_agent.py) | Builds LangGraph graph for an agent to play songs. |
-| [langgraph_mcp.py](examples/langgraph_mcp.py) | Builds Langgraph graph that uses tools from MCP HTTP server. |
-
-### OpenAI and OpenAI-Agents
-
-| Example | Description |
-| ------- | ----------- |
-| [openai_functioncalling.py](examples/openai_functioncalling.py) | Uses OpenAI Function Calling to call functions based on LLM output. |
-| [openai_agents_basic.py](examples/openai_agents_basic.py) | Uses the OpenAI Agents framework to build a single agent. |
-| [openai_agents_handoffs.py](examples/openai_agents_handoffs.py) | Uses the OpenAI Agents framework to handoff between several agents with tools. |
-| [openai_agents_tools.py](examples/openai_agents_tools.py) | Uses the OpenAI Agents framework to build a weekend planner with tools. |
-| [openai_agents_mcp_http.py](examples/openai_agents_mcp_http.py) | Uses the OpenAI Agents framework with an MCP HTTP server (travel planning tools). |
-
 ### PydanticAI
 
 | Example | Description |
 | ------- | ----------- |
-| [pydanticai_basic.py](examples/pydanticai_basic.py) | Uses PydanticAI to build a basic single agent (Spanish tutor). |
+| [pydanticai_basic.py](examples/pydanticai_basic.py) | Uses PydanticAI to build a basic single agent. |
 | [pydanticai_multiagent.py](examples/pydanticai_multiagent.py) | Uses PydanticAI to build a two-agent sequential workflow (flight + seat selection). |
 | [pydanticai_supervisor.py](examples/pydanticai_supervisor.py) | Uses PydanticAI with a supervisor orchestrating multiple agents. |
 | [pydanticai_graph.py](examples/pydanticai_graph.py) | Uses PydanticAI with pydantic-graph to build a small question/answer evaluation graph. |
 | [pydanticai_tools.py](examples/pydanticai_tools.py) | Uses PydanticAI with multiple Python tools for weekend activity planning. |
+| [pydanticai_playwright.py](examples/pydanticai_playwright.py) | Uses Azure OpenAI, Playwright, and scoped files for prompt-driven read-only research. |
 | [pydanticai_mcp_http.py](examples/pydanticai_mcp_http.py) | Uses PydanticAI with an MCP HTTP server toolset for travel planning (hotel search). |
 | [pydanticai_mcp_github.py](examples/pydanticai_mcp_github.py) | Uses PydanticAI with an MCP GitHub server toolset to triage repository issues. |
 
-### Other frameworks
-
-| Example | Description |
-| ------- | ----------- |
-| [llamaindex.py](examples/llamaindex.py) | Uses LlamaIndex to build a ReAct agent for RAG on multiple indexes. |
-
 ## Resources
 
-* [Agent Framework Documentation](https://learn.microsoft.com/agent-framework/)
-* [Langchain v1 Documentation](https://docs.langchain.com/oss/python/langchain/overview)
-* [LangGraph Documentation](https://docs.langchain.com/oss/python/langgraph/overview)
-* [LlamaIndex Documentation](https://docs.llamaindex.ai/en/latest/)
-* [OpenAI Agents Documentation](https://openai.github.io/openai-agents-python/)
-* [OpenAI Function Calling Documentation](https://platform.openai.com/docs/guides/function-calling?api-mode=chat)
 * [Pydantic AI Documentation](https://ai.pydantic.dev/multi-agent-applications/)

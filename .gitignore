@@ -111,6 +111,9 @@ celerybeat.pid
 # Environments
 .env
 .venv
+outputs/
+.auth/
+playwright/.auth/
 env/
 venv/
 ENV/

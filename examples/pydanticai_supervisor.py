@@ -1,7 +1,6 @@
 import asyncio
 import os
 import random
-from typing import Literal
 
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from dotenv import load_dotenv
@@ -11,12 +10,10 @@ from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
-"""Multi-agent example: triage hand-off to language-specific weather agents.
+"""Multi-agent example: triage hand-off to a weather agent.
 
-This mirrors the logic in `openai_agents_handoffs.py` but implemented with
-Pydantic AI programmatic hand-off: a triage agent determines whether the
-request is in Spanish or English, then we invoke the corresponding weather
-agent that can call a weather tool.
+This demonstrates Pydantic AI programmatic hand-off: a triage agent determines whether the
+request needs weather information, then we invoke a weather agent that can call a weather tool.
 """
 
 # Setup the OpenAI client to use Azure OpenAI or Ollama
@@ -48,7 +45,6 @@ class Weather(BaseModel):
 
 
 class TriageResult(BaseModel):
-    language: Literal["spanish", "english"]
     reason: str
 
 
@@ -60,15 +56,6 @@ async def get_weather(ctx: RunContext[None], city: str) -> Weather:
     return Weather(city=city, temperature=temp, wind_speed=wind_speed, rain_chance=rain_chance)
 
 
-spanish_weather_agent = Agent(
-    model,
-    tools=[get_weather],
-    system_prompt=(
-        "Eres un agente del clima. Solo respondes en español con información del tiempo para la ciudad pedida. "
-        "Usa la herramienta 'get_weather' para obtener datos. Devuelve una respuesta breve y clara."
-    ),
-)
-
 english_weather_agent = Agent(
     model,
     tools=[get_weather],
@@ -79,27 +66,23 @@ english_weather_agent = Agent(
 )
 
 
-# Triage agent decides which language agent should handle the request
+# Triage agent decides whether the weather agent should handle the request
 triage_agent = Agent(
     model,
     output_type=TriageResult,
     system_prompt=(
-        "You are a triage agent. Determine whether the user's request is primarily in Spanish or English. "
-        "Return language (either 'spanish' or 'english') and reason (a brief explanation of your choice) "
-        "Only choose 'spanish' if the request is entirely in Spanish; otherwise choose 'english'."
+        "You are a triage agent. Determine whether the user's request needs weather information. "
+        "Return a brief reason for your decision."
     ),
 )
 
 
 async def main():
-    user_input = "Hola, ¿cómo estás? ¿Puedes darme el clima para San Francisco CA?"
+    user_input = "What is the weather in San Francisco CA?"
     triage = await triage_agent.run(user_input)
     triage_output = triage.output
     print("Triage output:", triage_output)
-    if triage_output.language == "spanish":
-        weather_result = await spanish_weather_agent.run(user_input)
-    else:
-        weather_result = await english_weather_agent.run(user_input)
+    weather_result = await english_weather_agent.run(user_input)
     print(weather_result.output)
 
     if async_credential:

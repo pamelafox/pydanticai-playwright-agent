@@ -30,7 +30,7 @@ else:
 
 agent: Agent[None, str] = Agent(
     model,
-    system_prompt="You are a Spanish tutor. Help the user learn Spanish. ONLY respond in Spanish.",
+    system_prompt="You are a helpful assistant. Answer the user's questions clearly and concisely.",
     output_type=str,
 )
 

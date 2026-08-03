@@ -54,24 +54,8 @@ param gptDeploymentName string = 'gpt-5.4'
 @description('Capacity of the GPT deployment')
 // You can increase this, but capacity is limited per model/region, so you will get errors if you go over
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/quotas-limits
-param gptDeploymentCapacity int = 30
+param gptDeploymentCapacity int = 200
 
-
-@description('Name of the text embedding model to deploy')
-param embeddingModelName string = 'text-embedding-3-large'
-
-@description('Version of the text embedding model to deploy')
-// See version availability in this table:
-// https://learn.microsoft.com/azure/ai-services/openai/concepts/models?tabs=python-secure%2Cglobal-standard%2Cstandard-chat-completions#models-by-deployment-type
-param embeddingModelVersion string = '1'
-
-@description('Name of the model deployment (can be different from the model name)')
-param embeddingDeploymentName string = 'text-embedding-3-large'
-
-@description('Capacity of the text embedding deployment')
-// You can increase this, but capacity is limited per model/region, so you will get errors if you go over
-// https://learn.microsoft.com/en-us/azure/ai-services/openai/quotas-limits
-param embeddingDeploymentCapacity int = 30
 
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
@@ -121,18 +105,6 @@ module openAi 'br/public:avm/res/cognitive-services/account:0.7.1' = {
           capacity: gptDeploymentCapacity
         }
       }
-      {
-        name: embeddingDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: embeddingModelName
-          version: embeddingModelVersion
-        }
-        sku: {
-          name: 'GlobalStandard'
-          capacity: embeddingDeploymentCapacity
-        }
-      }
     ]
     roleAssignments: [
       {
@@ -152,5 +124,3 @@ output AZURE_RESOURCE_GROUP string = resourceGroup.name
 output AZURE_OPENAI_ENDPOINT string = openAi.outputs.endpoint
 output AZURE_OPENAI_CHAT_MODEL string = gptModelName
 output AZURE_OPENAI_CHAT_DEPLOYMENT string = gptDeploymentName
-output AZURE_OPENAI_EMBEDDING_MODEL string = embeddingModelName
-output AZURE_OPENAI_EMBEDDING_DEPLOYMENT string = embeddingDeploymentName
