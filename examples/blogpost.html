@@ -1,2 +1,57 @@
 Browser automation with Pydantic-AI + Playwright
 
+When we build agents, we often want to give them the ability to browse the web: open webpages, navigate from one page to the other, and read the content of a webpage.
+It's now easier than ever to build a web-browsing agent, thanks to the combination of the Pydantic-AI agent with built-in support for the Playwright MCP server.
+
+[diagram]
+
+<h2>Using Pydantic-AI with Microsoft Foundry models</h2>
+
+<p>Pydantic-AI is an open-source model-agnostic framework from Pydantic for building LLM-based applications and agents.
+It's type-safe and supports OpenTelemetry, making it a great choice for robust production applications.
+</p>
+
+We can use Pydantic-AI with Foundry models using either API keys or Entra token-based authentication.
+When possible, we always recommend the keyless route, so that's what we'll demonstrate here.
+
+We use the azure-identity package to authenticate with Entra, using either local or managed identity,
+and get back a token provider callback function for that credential:
+
+<pre>
+from azure.identity.aio import AzureDeveloperCliCredential, get_bearer_token_provider
+# Replace with ManagedIdentityCredential when running in production on Azure
+credential = AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
+token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
+</pre>
+"
+<p>Then we use the OpenAI package to configure the model connection: </p>
+
+<pre>
+from openai import AsyncOpenAI
+
+client = AsyncOpenAI(
+  base_url=os.environ["AZURE_OPENAI_ENDPOINT"] + "/openai/v1",
+  api_key=token_provider,
+)
+model = OpenAIChatModel(
+  model_name=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"],
+  provider=OpenAIProvider(openai_client=client),
+)
+</pre>
+
+<p>Let's break down the options used above:</p>
+<ul>
+    <li><code>base_url</code>: We point this at the <a target="_blank" href="https://learn.microsoft.com/azure/foundry/openai/api-version-lifecycle?tabs=python">OpenAI-compatible endpoint</a> for our Foundry model.
+This endpoint works for all the Azure OpenAI models (like gpt-5.6), but also for other Foundry Direct models,
+like Kimi-2.7. The URL looks like "https://AZURE_OPENAI_SERVICE_NAME.openai.azure.com/".
+    <li><code>api_key</code>: We pass in the token provider callback function that generates OAuth2 tokens using our Entra credential. If we were using API keys, we'd simply pass in the key string here instead.
+    <li><code>model_name</code>: We provide the name of the <em>deployment</em>, not the name of the model. Oftentimes, the deployment name is the same as the model, but not always - it depends on how you set it up in the Portal or infrastructure-as-code files. Notably, when using models on Foundry, you must always make an explicit deployment for the desired model, before you can use it.
+</ul>
+
+<h2>Integrating Playwright MCP capability</h2>
+
+<p>Playwright is a browser automation library. It was originally built for writing E2E tests to verify website correctness,
+    and is still the best option for E2E tests today.
+    But when the Playwright MCP server was released, it also became the most common way to give a coding agent access to websites.
+    When you yourself are developing a website, it's a great way to give the agent access to browse the website, do manual QA, and iterate on design improvements.
+    We can also use Playwright to access other websites, 
