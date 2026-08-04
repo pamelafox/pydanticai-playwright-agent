@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
     "azure-identity>=1.19.0",
+    "azure-monitor-opentelemetry-exporter>=1.0.0b55",
     "openai>=1.109.1",
     "python-dotenv>=1.0.0",
     "pydantic>=2.10.0",

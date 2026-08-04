@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 import logfire
 from azure.identity.aio import AzureDeveloperCliCredential, get_bearer_token_provider
+from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
@@ -65,6 +66,22 @@ def _artifact_state() -> dict[str, tuple[int, int]]:
         if path.is_file()
     }
 
+
+def _configure_tracing(trace_file: TextIO) -> logfire.Logfire:
+    span_processors = [SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file))]
+    connection_string = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+    if connection_string:
+        span_processors.append(
+            SimpleSpanProcessor(AzureMonitorTraceExporter.from_connection_string(connection_string))
+        )
+    return logfire.configure(
+        send_to_logfire="if-token-present",
+        token=os.getenv("LOGFIRE_TOKEN"),
+        service_name="pydanticai-playwright-qa",
+        console=logfire.ConsoleOptions(),
+        additional_span_processors=span_processors,
+    )
+
 async def run_qa(url: str, storage_state: str | None = None) -> str:
     """Run a read-only QA pass against one operator-supplied site."""
     parsed_url = urlparse(url)
@@ -77,13 +94,7 @@ async def run_qa(url: str, storage_state: str | None = None) -> str:
 
     OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
     trace_file = TRACE_FILE.open("a", encoding="utf-8")
-    configured_logfire = logfire.configure(
-        send_to_logfire="if-token-present",
-        token=os.getenv("LOGFIRE_TOKEN"),
-        service_name="pydanticai-playwright-qa",
-        console=False,
-        additional_span_processors=[SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file))],
-    )
+    configured_logfire = _configure_tracing(trace_file)
     credential = AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
     try:
         token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
@@ -125,7 +136,7 @@ async def run_qa(url: str, storage_state: str | None = None) -> str:
         return f"Wrote: {', '.join(f'outputs/{path}' for path in changed)}\n\n{result.output}"
     finally:
         await credential.close()
-        configured_logfire.shutdown()
+        configured_logfire.shutdown(timeout_millis=5_000, flush=False)
         trace_file.close()
 
 

@@ -116,6 +116,29 @@ module openAi 'br/public:avm/res/cognitive-services/account:0.7.1' = {
   }
 }
 
+var logAnalyticsWorkspaceName = '${prefix}-logs'
+module logAnalyticsWorkspace 'br/public:avm/res/operational-insights/workspace:0.9.1' = {
+  name: 'logAnalyticsWorkspace'
+  scope: resourceGroup
+  params: {
+    name: logAnalyticsWorkspaceName
+    location: location
+    tags: tags
+  }
+}
+
+var applicationInsightsName = '${prefix}-appinsights'
+module applicationInsights 'br/public:avm/res/insights/component:0.8.0' = {
+  name: 'applicationInsights'
+  scope: resourceGroup
+  params: {
+    name: applicationInsightsName
+    location: location
+    tags: tags
+    workspaceResourceId: logAnalyticsWorkspace.outputs.resourceId
+  }
+}
+
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
@@ -124,3 +147,5 @@ output AZURE_RESOURCE_GROUP string = resourceGroup.name
 output AZURE_OPENAI_ENDPOINT string = openAi.outputs.endpoint
 output AZURE_OPENAI_CHAT_MODEL string = gptModelName
 output AZURE_OPENAI_CHAT_DEPLOYMENT string = gptDeploymentName
+
+output APPLICATIONINSIGHTS_CONNECTION_STRING string = applicationInsights.outputs.connectionString

@@ -1,7 +1,8 @@
-Browser automation with Pydantic-AI + Playwright
+<h1>Browser automation with Pydantic-AI + Playwright</h1>
 
-When we build agents, we often want to give them the ability to browse the web: open webpages, navigate from one page to the other, and read the content of a webpage.
+<p>When we build agents, we often want to give them the ability to browse the web: open webpages, navigate from one page to the other, and read the content of a webpage.
 It's now easier than ever to build a web-browsing agent, thanks to the combination of the Pydantic-AI agent with built-in support for the Playwright MCP server.
+</p>
 
 [diagram]
 
@@ -11,11 +12,13 @@ It's now easier than ever to build a web-browsing agent, thanks to the combinati
 It's type-safe and supports OpenTelemetry, making it a great choice for robust production applications.
 </p>
 
-We can use Pydantic-AI with Foundry models using either API keys or Entra token-based authentication.
+<p>We can use Pydantic-AI with Foundry models using either API keys or Entra token-based authentication.
 When possible, we always recommend the keyless route, so that's what we'll demonstrate here.
-
+</p>
+<p>
 We use the azure-identity package to authenticate with Entra, using either local or managed identity,
 and get back a token provider callback function for that credential:
+</p>
 
 <pre>
 from azure.identity.aio import AzureDeveloperCliCredential, get_bearer_token_provider
@@ -23,7 +26,7 @@ from azure.identity.aio import AzureDeveloperCliCredential, get_bearer_token_pro
 credential = AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
 token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
 </pre>
-"
+
 <p>Then we use the OpenAI package to configure the model connection: </p>
 
 <pre>
@@ -134,23 +137,94 @@ result = await agent.run(
 <p>Fortunately, we can instrument any Pydantic-AI agent with OpenTelemetry, exporting the traces
     to any OpenTelemetry-compliant provider, like Pydantic Logfire or Azure App Insights.</p>
 
-<p>Logfire:</p>
+<p>Let's step through the code to send traces to Logfire:</p>
 
 <pre>
 configured_logfire = logfire.configure(
     send_to_logfire="if-token-present",
     token=os.getenv("LOGFIRE_TOKEN"),
     service_name="pydanticai-playwright-qa",
-    console=False,
-    additional_span_processors=[SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file))],
+    console=logfire.ConsoleOptions(),
+    additional_span_processors=[SimpleSpanProcessor(ConsoleSpanExporter(out="traces.jsonl"))],
 )
 </pre>
 
-<pre>configured_logfire.instrument_openai(client)
+<p>That constructor sends the traces to Logfire based on the token saved in the environment.
+It includes logging of the traces to the console,
+plus an additional exporter to a local file.
+The console traces are helpful for us to watch while we are developing the agent,
+and the local traces file can be useful input for coding agents debugging an agent.
+By pointing an agent at the traces file, it can audit the Playwright browser calls
+and recommend improvements to the prompt and parameters.
+<p>
+
+<p>Next, we set up instrumentation specific to the packages we're using:
+</p>
+
+<pre>
+configured_logfire.instrument_openai(client)
 configured_logfire.instrument_pydantic_ai(agent, include_content=True)
 </pre>
 
-<p>After running the agents, we can browse through the traces. Here's what it looks 
+<p>That code calls
+    <code>instrument_openai</code> for our calls through the openai package,
+    and <code>instrument_pydantic_ai</code> for our calls through pydantic-ai package.
+  Both of those packages export traces using the <a target="_blank" href="https://opentelemetry.io/docs/specs/semconv/gen-ai/">Generative AI semantic conventions</a>,
+  which exists to ensure that calls to LLMs, tools, and agents, are traced in a consistent way across 
+  observability platforms and agent frameworks.
+</p>
 
+<p>After running the agent, we can browse through the traces. Here's what a single run looks like:
+</p>
 
+<img src="screenshot_logfire.png" alt="Screenshot of Logfire interface with agent and playwright calls">
 
+<p>To also export traces to Azure Application Insights, we can add an additional span processor
+    from the <code>azure-monitor-opentelemetry-exporter</code> package, pointing at our App Insights instance:
+</p>
+
+<pre>
+connection_string = os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"]
+logfire.configure(
+  # other arguments
+  additional_span_processors=[SimpleSpanProcessor(AzureMonitorTraceExporter.from_connection_string(connection_string))],
+)
+</pre>
+
+<p>Since both platforms support OpenTelemetry, the traces are the same across both.</p>
+
+<h2>Accessing authenticated websites</h2>
+
+<p>But wait, what if the target website requires user login? When the Playwright MCP server starts a browser instance, it's completely isolated 
+from your day-to-day browser instance, so it has no access to cookies. Typically, that is a very good thing, since we don't want agents to have
+arbitrary access to our logged in accounts. However, you may be building an agent that is dependent on access to a logged in website.
+</p>
+<p>
+In that case, we can explicitly pass a session state to the <code>PlaywrightBrowser instance, and it will use the cookies from that state:
+</p>
+
+<pre>
+browser = PlaywrightBrowser(
+    storage_state="playwright/.auth/site.json"
+)
+</pre>
+
+<p>To generate that state JSON file, we can run the Playwright <code>codegen</code> command to pop up the website.
+Once we login and close the browser, the browser state is saved to the target location.
+It's important to keep that storage file safe and secure - don't check into version control!</p>
+
+<pre>
+uv run playwright codegen https://your-owned-site.example/ --save-storage=playwright/.auth/site.json
+</pre>
+
+<h2>Next steps</h2>
+
+<p>Download the full code for the Playwright+Pydantic-AI agent from this project:
+</p>
+<p><a target="_blank" href="https://github.com/pamelafox/pydanticai-playwright-agent">
+github.com/pamelafox/pydanticai-playwright-agent</a></p>
+
+<p>That repository also includes infrastructure-as-code (Bicep) for provisioning an Azure OpenAI model
+and configuring the full environment for you.</p>
+
+<p>Fork the code, customize it, and make your own browser-using agent!</p>
