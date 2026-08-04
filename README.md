@@ -14,6 +14,13 @@ capabilities.
   * [Local environment](#local-environment)
 * [Deploying Azure model](#deploying-azure-model)
 * [Running the agent](#running-the-agent)
+  * [Install and run](#install-and-run)
+  * [Allowed domains](#allowed-domains)
+  * [Outputs](#outputs)
+  * [Authentication](#authentication)
+* [OpenTelemetry](#opentelemetry)
+  * [Logfire configuration](#logfire-configuration)
+  * [Azure Application Insights configuration](#azure-application-insights-configuration)
 * [Resources](#resources)
 
 ## Getting started
@@ -101,7 +108,7 @@ This project includes infrastructure as code (IaC) to provision an Azure OpenAI 
 
 ## Running the agent
 
-The [example file](examples/pydanticai_playwright.py) combines an Azure OpenAI Pydantic AI agent
+The [example file](pydanticai_playwright.py) combines an Azure OpenAI Pydantic AI agent
 with the Pydantic AI Harness `PlaywrightBrowser` MCP capability. Its included workflow performs a
 read-only QA pass against a website you own: it loads the URL, creates a testing plan, explores safe
 same-site journeys, and writes a report to `outputs/qa-report.md`. Forks can replace the system
@@ -131,7 +138,7 @@ dependency in `pyproject.toml` with the released version, run `uv lock`, and run
 3. Run the agent:
 
     ```shell
-    uv run python examples/pydanticai_playwright.py https://www.pamelafox.org
+    uv run python pydanticai_playwright.py https://www.pamelafox.org
     ```
 
     By default, the agent uses Playwright to do a manual QA of the provided website URL
@@ -139,10 +146,10 @@ dependency in `pyproject.toml` with the released version, run `uv lock`, and run
 
 ### Allowed domains
 
-The operator controls the allowed domain by supplying the starting URL. The browser allowlist is
-constructed from that URL's hostname, permits same-site navigation, blocks private addresses, and
-does not let the model or webpage expand the allowlist. Use a URL for a site you own and do not
-assume that the allowlist is a complete boundary for arbitrary JavaScript network traffic.
+The starting URL controls which site the browser can visit. In `pydanticai_playwright.py`,
+`urlparse()` extracts its hostname and passes it to `PlaywrightBrowser(allowed_domains=[...])`.
+The browser also uses `block_private_addresses=True` to reject private network addresses. The
+allowlist is set by the code before the agent runs; the model and the webpage cannot add domains.
 
 ### Outputs
 
@@ -159,13 +166,12 @@ interactively once:
 ```shell
 mkdir -p playwright/.auth
 uv run playwright codegen https://your-owned-site.example/ --save-storage=playwright/.auth/site.json
-uv run python examples/pydanticai_playwright.py https://your-owned-site.example/ \
+uv run python pydanticai_playwright.py https://your-owned-site.example/ \
     --session-state playwright/.auth/site.json
 ```
 
 Storage state contains cookies and local storage that can impersonate an account. It is gitignored,
-must not be shared, and should be deleted when the session expires. Do not use a real Chrome profile
-or browser-extension attachment.
+must not be shared, and should be deleted when the session expires. Do not use a real Chrome profile or browser-extension attachment.
 
 ## OpenTelemetry
 

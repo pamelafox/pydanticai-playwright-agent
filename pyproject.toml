@@ -1,5 +1,5 @@
 [project]
-name = "pydanticai-playwright-examples"
+name = "pydanticai-playwright-agent"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
@@ -7,11 +7,6 @@ dependencies = [
     "azure-monitor-opentelemetry-exporter>=1.0.0b55",
     "openai>=1.109.1",
     "python-dotenv>=1.0.0",
-    "pydantic>=2.10.0",
-    "rich>=13.9.0",
-    "dotenv-azd>=0.1.0",
-    "aiohttp>=3.11.0",
-    "faker>=33.0.0",
     "pydantic-ai>=2.18.0",
     "logfire>=4.32.0",
     "pydantic-ai-harness[playwright] @ git+https://github.com/pydantic/pydantic-ai-harness.git@730130f3322936f0396afa933b2f4184fc0028bf",
