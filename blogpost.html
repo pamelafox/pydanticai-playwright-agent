@@ -3,7 +3,7 @@
 <p>When we build agents, we often want to give them the ability to browse the web:
 open webpages, navigate from one page to the other, and read the content of a webpage.
 It's now easier than ever to build a web-browsing agent,
-thanks to the combination of the Pydantic-AI agent with built-in support for the Playwright MCP server.
+thanks to the combination of a Pydantic-AI agent and the Playwright capability from the Pydantic-AI Harness.
 </p>
 
 <img src="diagram.png" alt="Diagram showing a user asking a Pydantic AI agent to check a website for usability issues. The agent uses a Microsoft Foundry model to choose Playwright MCP tool calls and write the final output. Playwright MCP performs browser actions and returns results to the agent. ">
@@ -48,8 +48,9 @@ model = OpenAIChatModel(
 <p>Let's break down the options used above:</p>
 <ul>
     <li><code>base_url</code>: We point this at the <a target="_blank" href="https://learn.microsoft.com/azure/foundry/openai/api-version-lifecycle?tabs=python">OpenAI-compatible endpoint</a> for our Foundry model.
-This endpoint works for all the Azure OpenAI models (like gpt-5.6), but also for other Foundry Direct models,
-like Kimi-2.7. The URL looks like "https://AZURE_OPENAI_SERVICE_NAME.openai.azure.com/".
+This endpoint works for Azure OpenAI models (like <code>gpt-5.4</code>, which this project deploys), and for
+cross-provider Foundry models that support the OpenAI v1 API, like <code>Kimi-K2.7-Code</code>.
+The base URL looks like "https://AZURE_OPENAI_SERVICE_NAME.openai.azure.com/openai/v1".
     <li><code>api_key</code>: We pass in the token provider callback function that generates OAuth2 tokens using our Entra credential. If we were using API keys, we'd simply pass in the key string here instead.
     <li><code>model_name</code>: We provide the name of the <em>deployment</em>, not the name of the model. Oftentimes, the deployment name is the same as the model, but not always - it depends on how you set it up in the Portal or infrastructure-as-code files. Notably, when using models on Foundry, you must always make an explicit deployment for the desired model, before you can use it.
 </ul>
@@ -70,12 +71,13 @@ like Kimi-2.7. The URL looks like "https://AZURE_OPENAI_SERVICE_NAME.openai.azur
 from pydantic_ai_harness.playwright import PlaywrightBrowser
 
 browser = PlaywrightBrowser(
-    allowed_domains=[website_url],
+    allowed_domains=[website_hostname],
     block_private_addresses=True,
     headless=False,
+    max_content_tokens=30000,
     timeout_ms=30_000,
     screenshot_on_navigate=False,
-    auto_install_chromium=False
+    auto_install_chromium=False,
 )
 </pre>
 
@@ -85,7 +87,7 @@ browser = PlaywrightBrowser(
         This prevents the agent from navigating to unexpected websites and keep its scenario more targeted.
     <li><code>block_private_addresses</code>: By default, this option is set to <code>True</code> to prevent
     navigation to localhost and private or reserved IP addresses, even when
-    that address appears in <code>allowed_domains</code>. Set it to <code>false</code>
+    that address appears in <code>allowed_domains</code>. Set it to <code>False</code>
     only when the agent needs explicit access to a trusted locally deployed application.
     <li><code>headless</code>: By default, Playwright will run in headless mode, which means that the browser window is not visible.
     When developing, I often set this to <code>False</code>, since it can be helpful to actually watch Playwright control the browser.
@@ -116,7 +118,6 @@ agent = Agent(
   model=model,
   capabilities=[browser, FileSystem(root_dir=OUTPUT_ROOT)],
   system_prompt="You are a careful manual QA agent testing a website that the user owns...",
-  max_concurrency=1,
 )
 </pre>
 
@@ -143,12 +144,13 @@ result = await agent.run(
 <p>Let's step through the code to send traces to Logfire:</p>
 
 <pre>
+trace_file = (OUTPUT_ROOT / "traces.jsonl").open("a", encoding="utf-8")
 configured_logfire = logfire.configure(
     send_to_logfire="if-token-present",
     token=os.getenv("LOGFIRE_TOKEN"),
     service_name="pydanticai-playwright-qa",
     console=logfire.ConsoleOptions(),
-    additional_span_processors=[SimpleSpanProcessor(ConsoleSpanExporter(out="traces.jsonl"))],
+    additional_span_processors=[SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file))],
 )
 </pre>
 
@@ -188,9 +190,15 @@ configured_logfire.instrument_pydantic_ai(agent, include_content=True)
 
 <pre>
 connection_string = os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"]
+
 logfire.configure(
-  # other arguments
-  additional_span_processors=[SimpleSpanProcessor(AzureMonitorTraceExporter.from_connection_string(connection_string))],
+    # other arguments
+    additional_span_processors=[
+        SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file)),
+        SimpleSpanProcessor(
+            AzureMonitorTraceExporter.from_connection_string(connection_string)
+        ),
+    ],
 )
 </pre>
 
@@ -203,7 +211,7 @@ from your day-to-day browser instance, so it has no access to cookies. Typically
 arbitrary access to our logged in accounts. However, you may be building an agent that is dependent on access to a logged in website.
 </p>
 <p>
-In that case, we can explicitly pass a session state to the <code>PlaywrightBrowser instance, and it will use the cookies from that state:
+In that case, we can explicitly pass a session state to the <code>PlaywrightBrowser</code> instance, and it will use the cookies and local storage from that state:
 </p>
 
 <pre>
@@ -218,6 +226,13 @@ It's important to keep that storage file safe and secure - don't check into vers
 
 <pre>
 uv run playwright codegen https://your-owned-site.example/ --save-storage=playwright/.auth/site.json
+</pre>
+
+<p>Then pass the saved state to the agent through the command-line option:</p>
+
+<pre>
+uv run python pydanticai_playwright.py https://your-owned-site.example/ \
+    --session-state playwright/.auth/site.json
 </pre>
 
 <h2>Next steps</h2>

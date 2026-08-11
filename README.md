@@ -9,9 +9,8 @@ This project shows you how to build a [Pydantic AI agent](https://pydantic.dev/d
   * [GitHub Codespaces](#github-codespaces)
   * [VS Code Dev Containers](#vs-code-dev-containers)
   * [Local environment](#local-environment)
-* [Deploying Azure OpenAI model](#deploying-azure-openai-model)
+* [Deploying the model](#deploying-the-model)
 * [Running the agent](#running-the-agent)
-  * [Install and run](#install-and-run)
   * [Allowed domains](#allowed-domains)
   * [Outputs](#outputs)
   * [Authentication](#authentication)
@@ -132,7 +131,8 @@ with the `PlaywrightBrowser` MCP capability from the Pydantic AI harness.
 ### Allowed domains
 
 The starting URL controls which site the browser can visit. In `pydanticai_playwright.py`,
-`urlparse()` extracts its hostname and passes it to `PlaywrightBrowser(allowed_domains=[...])`.
+`urlparse()` extracts its hostname into `website_hostname` and passes it to
+`PlaywrightBrowser(allowed_domains=[website_hostname])`.
 The browser also uses `block_private_addresses=True` to reject private network addresses. The
 allowlist is set by the code before the agent runs; the model and the webpage cannot add domains.
 

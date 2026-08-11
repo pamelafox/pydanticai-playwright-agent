@@ -87,6 +87,7 @@ async def run_qa(url: str, storage_state: str | None = None) -> str:
     parsed_url = urlparse(url)
     if parsed_url.scheme not in {"http", "https"} or not parsed_url.hostname:
         raise ValueError("URL must be an absolute http:// or https:// URL.")
+    website_hostname = parsed_url.hostname
     if storage_state and not Path(storage_state).is_file():
         raise ValueError(f"Session state file does not exist: {storage_state}")
     if not os.getenv("AZURE_OPENAI_ENDPOINT") or not os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT"):
@@ -109,7 +110,7 @@ async def run_qa(url: str, storage_state: str | None = None) -> str:
         )
         browser = PlaywrightBrowser(
             headless=False,
-            allowed_domains=[parsed_url.hostname],
+            allowed_domains=[website_hostname],
             block_private_addresses=True,
             screenshot_on_navigate=False,
             max_content_tokens=30000,
