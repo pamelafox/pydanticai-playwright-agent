@@ -5,6 +5,8 @@
 
 This project shows you how to build a [Pydantic AI agent](https://pydantic.dev/docs/ai/) using a [Microsoft Foundry model](https://learn.microsoft.com/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure) and the [Playwright](https://playwright.dev/python/) capability from Pydantic AI Harness. The example workflow is a website QA analysis agent, but you can customize the code for any browser-using agent scenario.
 
+![Diagram showing a Pydantic AI agent using a Microsoft Foundry model and Playwright tools to inspect a website and write a QA report](readme_diagram.png)
+
 * [Getting started](#getting-started)
   * [GitHub Codespaces](#github-codespaces)
   * [VS Code Dev Containers](#vs-code-dev-containers)
@@ -171,7 +173,7 @@ OpenTelemetry tracing is written locally by default.
 
 If `LOGFIRE_TOKEN` is present, the example also sends traces to Logfire; otherwise no Logfire cloud export is attempted.
 
-![Logfire trace view showing the Pydantic AI agent run and Playwright browser calls](screenshot_logfire.png)
+![Logfire trace view showing the Pydantic AI agent run and Playwright browser calls](readme_logfire.png)
 
 ### Azure Application Insights configuration
 

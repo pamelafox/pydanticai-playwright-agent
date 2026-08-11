@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" role="img" aria-labelledby="diagram-title diagram-description" style="font-family: 'Segoe UI', Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 130 960 330" role="img" aria-labelledby="diagram-title diagram-description" style="font-family: 'Segoe UI', Arial, sans-serif;">
   <title id="diagram-title">Pydantic AI agent using Playwright tools</title>
   <desc id="diagram-description">A user sends a website QA request to a Pydantic AI agent. The agent asks an Azure OpenAI model what to do, calls tools provided by the Playwright capability, observes the browser, and loops until it writes a QA report.</desc>
 
@@ -51,10 +51,7 @@
     </marker>
   </defs>
 
-  <rect width="960" height="620" rx="24" fill="#ffffff" />
-  <path d="M0 112 H960" stroke="#e6eaf2" stroke-width="2" />
-  <text x="56" y="66" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#20152f">Pydantic AI + Playwright</text>
-  <text x="58" y="94" font-family="Arial, sans-serif" font-size="17" fill="#695b70">An agent turns a website QA request into safe browser actions and a report.</text>
+  <rect y="130" width="960" height="330" fill="#ffffff" />
 
   <!-- User request -->
   <g filter="url(#shadow)">
@@ -131,5 +128,4 @@
 
   <path d="M300 384 H240" fill="none" stroke="#e85d4a" stroke-width="3" marker-end="url(#arrow-coral)" />
 
-  <text x="480" y="596" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#695b70">The loop repeats until the agent has enough evidence to write the report.</text>
 </svg>
