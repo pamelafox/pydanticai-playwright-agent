@@ -1,10 +1,12 @@
 <h1>Browser automation with Pydantic-AI + Playwright</h1>
 
-<p>When we build agents, we often want to give them the ability to browse the web: open webpages, navigate from one page to the other, and read the content of a webpage.
-It's now easier than ever to build a web-browsing agent, thanks to the combination of the Pydantic-AI agent with built-in support for the Playwright MCP server.
+<p>When we build agents, we often want to give them the ability to browse the web:
+open webpages, navigate from one page to the other, and read the content of a webpage.
+It's now easier than ever to build a web-browsing agent,
+thanks to the combination of the Pydantic-AI agent with built-in support for the Playwright MCP server.
 </p>
 
-[diagram]
+<img src="diagram.png" alt="Diagram showing a user asking a Pydantic AI agent to check a website for usability issues. The agent uses a Microsoft Foundry model to choose Playwright MCP tool calls and write the final output. Playwright MCP performs browser actions and returns results to the agent. ">
 
 <h2>Using Pydantic-AI with Microsoft Foundry models</h2>
 
@@ -22,6 +24,7 @@ and get back a token provider callback function for that credential:
 
 <pre>
 from azure.identity.aio import AzureDeveloperCliCredential, get_bearer_token_provider
+
 # Replace with ManagedIdentityCredential when running in production on Azure
 credential = AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
 token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")

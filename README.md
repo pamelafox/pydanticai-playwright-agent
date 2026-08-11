@@ -3,16 +3,13 @@
 [![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://codespaces.new/pamelafox/pydanticai-playwright-agent)
 [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/pamelafox/pydanticai-playwright-agent)
 
-This repository is a small, reusable example of combining Pydantic AI, Azure OpenAI, and the
-Playwright MCP capability. The included workflow demonstrates read-only website QA, but developers
-can fork it for other combinations of Pydantic AI agents, Playwright browser tools, and MCP-style
-capabilities.
+This project shows you how to build a [Pydantic AI agent](https://pydantic.dev/docs/ai/) using a [Microsoft Foundry model](https://learn.microsoft.com/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure) and the [Playwright MCP server](https://playwright.dev/docs/getting-started-mcp). The example workflow is a website QA analysis agent, but you can customize the code for any browser-using agent scenario.
 
 * [Getting started](#getting-started)
   * [GitHub Codespaces](#github-codespaces)
   * [VS Code Dev Containers](#vs-code-dev-containers)
   * [Local environment](#local-environment)
-* [Deploying Azure model](#deploying-azure-model)
+* [Deploying Azure OpenAI model](#deploying-azure-openai-model)
 * [Running the agent](#running-the-agent)
   * [Install and run](#install-and-run)
   * [Allowed domains](#allowed-domains)
@@ -71,11 +68,11 @@ A related option is VS Code Dev Containers, which will open the project in your 
     source .venv/bin/activate  # On Windows: .venv\Scripts\activate
     ```
 
-## Deploying Azure model
+## Deploying the model
 
-To run the examples using models from Azure OpenAI, you need to provision the Azure AI resources, which will incur costs.
+Pydantic AI agents can run with models from many providers, but the code in this project is currently configured to use an Azure OpenAI model from Microsoft Foundry.
 
-This project includes infrastructure as code (IaC) to provision an Azure OpenAI deployment of "gpt-5.4". The IaC is defined in the `infra` directory and uses the Azure Developer CLI to provision the resource.
+This project includes infrastructure as code (IaC) to provision an Azure OpenAI deployment of "gpt-5.4". The IaC is defined in the `infra` directory and uses the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/) to provision the resource. Once you have an Azure account, run these steps:
 
 1. Make sure the [Azure Developer CLI (azd)](https://aka.ms/install-azd) is installed.
 
@@ -108,20 +105,8 @@ This project includes infrastructure as code (IaC) to provision an Azure OpenAI 
 
 ## Running the agent
 
-The [example file](pydanticai_playwright.py) combines an Azure OpenAI Pydantic AI agent
-with the Pydantic AI Harness `PlaywrightBrowser` MCP capability. Its included workflow performs a
-read-only QA pass against a website you own: it loads the URL, creates a testing plan, explores safe
-same-site journeys, and writes a report to `outputs/qa-report.md`. Forks can replace the system
-instructions, tools, and artifact workflow for other Pydantic AI and Playwright applications.
-
-This example is built on the [Pydantic AI Harness](https://pydantic.dev/docs/ai/harness/) and the
-[`PlaywrightBrowser` capability PR](https://github.com/pydantic/pydantic-ai-harness/pull/420).
-The dependency is temporarily pinned to commit
-`730130f3322936f0396afa933b2f4184fc0028bf` from `backport/browser` because the capability is not
-yet being consumed from a released package. After the capability is released, replace the VCS
-dependency in `pyproject.toml` with the released version, run `uv lock`, and run `uv sync` again.
-
-### Install and run
+The [pydanticai_playwright.py](pydanticai_playwright.py) file combines a Pydantic AI `Agent`
+with the `PlaywrightBrowser` MCP capability from the Pydantic AI harness.
 
 1. Install the Python packages:
 
@@ -160,26 +145,31 @@ content, so treat it as sensitive local data.
 
 ### Authentication
 
-Authenticated runs are optional. Create a site-scoped Playwright storage state by logging in
-interactively once:
+If your website requires authentication, you will first need to save a Playwright storage state JSON with the cookies for that website.
+
+Create the storage state for the target website:
 
 ```shell
 mkdir -p playwright/.auth
 uv run playwright codegen https://your-owned-site.example/ --save-storage=playwright/.auth/site.json
+```
+
+Run the agent with the storage state:
+
+```shell
 uv run python pydanticai_playwright.py https://your-owned-site.example/ \
     --session-state playwright/.auth/site.json
 ```
 
-Storage state contains cookies and local storage that can impersonate an account. It is gitignored,
-must not be shared, and should be deleted when the session expires. Do not use a real Chrome profile or browser-extension attachment.
+⚠️ Storage state contains cookies and local storage that can impersonate an account. It is gitignored, must not be shared, and should be deleted when the session expires.
 
 ## OpenTelemetry
 
+OpenTelemetry tracing is written locally by default.
+
 ### Logfire configuration
 
-Tracing is written locally by default. If `LOGFIRE_TOKEN` is present, the example also sends traces
-to Logfire; otherwise no Logfire cloud export is attempted. Do not commit the token or generated
-trace files.
+If `LOGFIRE_TOKEN` is present, the example also sends traces to Logfire; otherwise no Logfire cloud export is attempted.
 
 ### Azure Application Insights configuration
 

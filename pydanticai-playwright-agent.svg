@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" role="img" aria-labelledby="diagram-title diagram-description" style="font-family: 'Segoe UI', Arial, sans-serif;">
+  <title id="diagram-title">Pydantic AI agent using Playwright MCP tools</title>
+  <desc id="diagram-description">A user sends a website QA request to a Pydantic AI agent. The agent asks an Azure OpenAI model what to do, calls tools exposed by a Playwright MCP server, observes the browser, and loops until it writes a QA report.</desc>
+
+  <defs>
+    <linearGradient id="agent-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0fb" />
+      <stop offset="1" stop-color="#f6c6e9" />
+    </linearGradient>
+    <linearGradient id="server-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#effcf4" />
+      <stop offset="1" stop-color="#d3f5df" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#20152f" flood-opacity="0.14" />
+    </filter>
+    <marker id="arrow-dark" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L12,6 L0,12 L3,6 Z" fill="#32115f" />
+    </marker>
+    <marker id="arrow-coral" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L12,6 L0,12 L3,6 Z" fill="#e85d4a" />
+    </marker>
+  </defs>
+
+  <rect width="960" height="620" rx="24" fill="#ffffff" />
+  <path d="M0 112 H960" stroke="#e6eaf2" stroke-width="2" />
+  <text x="56" y="66" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#20152f">Pydantic AI + Playwright MCP</text>
+  <text x="58" y="94" font-family="Arial, sans-serif" font-size="17" fill="#695b70">An agent turns a website QA request into safe browser actions and a report.</text>
+
+  <!-- User request -->
+  <g filter="url(#shadow)">
+    <rect x="48" y="190" width="190" height="116" rx="14" fill="#eef7ff" stroke="#5b9bd5" stroke-width="3" />
+  </g>
+  <text x="78" y="233" text-anchor="middle" font-size="30">👤</text>
+  <text x="108" y="224" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#20152f">User request</text>
+  <text x="68" y="266" font-family="Arial, sans-serif" font-size="15" fill="#695b70">“Check my website for</text>
+  <text x="68" y="288" font-family="Arial, sans-serif" font-size="15" fill="#695b70">usability issues.”</text>
+
+  <!-- Agent -->
+  <g filter="url(#shadow)">
+    <rect x="300" y="164" width="320" height="266" rx="16" fill="url(#agent-fill)" stroke="#e920c1" stroke-width="3" />
+  </g>
+  <image href="https://pydantic.dev/docs/ai/img/pydantic-ai-light.svg" x="350" y="180" width="220" height="40" preserveAspectRatio="xMidYMid meet" />
+  <text x="460" y="241" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#69405f">orchestrates the agent loop</text>
+
+  <!-- Model inside the agent -->
+  <rect x="328" y="275" width="264" height="102" rx="12" fill="#f4f1ff" stroke="#a99be8" stroke-width="3" />
+  <image href="AI-Foundry.svg" x="350" y="287" width="24" height="24" preserveAspectRatio="xMidYMid meet" />
+  <text x="384" y="308" font-family="Aptos, Arial, sans-serif" font-size="16" font-weight="700" fill="#20152f">Microsoft Foundry Model</text>
+  <text x="460" y="336" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#695b70">chooses the next tool call</text>
+  <text x="460" y="359" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#695b70">writes the final output</text>
+
+  <!-- MCP server -->
+  <g filter="url(#shadow)">
+    <rect x="690" y="164" width="220" height="138" rx="16" fill="url(#server-fill)" stroke="#2ead66" stroke-width="3" />
+  </g>
+  <image href="https://playwright.dev/img/playwright-logo.svg" x="700" y="177" width="32" height="32" preserveAspectRatio="xMidYMid meet" />
+  <text x="740" y="200" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#20152f">Playwright MCP</text>
+  <line x1="730" y1="217" x2="870" y2="217" stroke="#8ed8ab" stroke-width="2" />
+  <text x="800" y="247" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#326149">snapshot · click · scroll</text>
+  <text x="800" y="279" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#326149">navigate · get text · wait</text>
+
+  <!-- Browser and website -->
+  <g filter="url(#shadow)">
+    <rect x="690" y="338" width="220" height="92" rx="14" fill="#ffffff" stroke="#aab5c8" stroke-width="3" />
+  </g>
+  <rect x="690" y="338" width="220" height="24" rx="12" fill="#e9edf4" />
+  <circle cx="706" cy="350" r="4" fill="#ef6b5b" />
+  <circle cx="720" cy="350" r="4" fill="#f3c94f" />
+  <circle cx="734" cy="350" r="4" fill="#58b77a" />
+  <rect x="750" y="344" width="142" height="12" rx="6" fill="#ffffff" stroke="#cbd3df" />
+  <text x="821" y="353" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#69778b">your-site.example</text>
+  <rect x="706" y="373" width="188" height="45" rx="5" fill="#f4f7fb" />
+  <rect x="718" y="381" width="70" height="7" rx="3" fill="#6758d4" />
+  <rect x="718" y="395" width="148" height="5" rx="2" fill="#c6cfdb" />
+  <rect x="718" y="406" width="108" height="5" rx="2" fill="#c6cfdb" />
+
+  <!-- Report -->
+  <g filter="url(#shadow)">
+    <rect x="48" y="338" width="190" height="92" rx="14" fill="#fff1ee" stroke="#ff8c72" stroke-width="3" />
+  </g>
+  <text x="87" y="390" text-anchor="middle" font-size="30">📄</text>
+  <text x="116" y="374" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#20152f">Final output</text>
+  <text x="116" y="401" font-family="Arial, sans-serif" font-size="12" fill="#695b70">outputs/qa-report.md</text>
+
+  <!-- Main flow -->
+  <path d="M238 248 H298" fill="none" stroke="#32115f" stroke-width="3" marker-end="url(#arrow-dark)" />
+
+  <path d="M620 218 H688" fill="none" stroke="#32115f" stroke-width="3" marker-end="url(#arrow-dark)" />
+  <text x="655" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#695b70">tool call</text>
+
+  <path d="M690 286 H622" fill="none" stroke="#32115f" stroke-width="3" marker-end="url(#arrow-dark)" />
+  <text x="655" y="308" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#695b70">result</text>
+
+  <path d="M800 302 V336" fill="none" stroke="#32115f" stroke-width="3" marker-end="url(#arrow-dark)" />
+  <text x="820" y="324" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#695b70">actions</text>
+
+  <path d="M300 384 H240" fill="none" stroke="#e85d4a" stroke-width="3" marker-end="url(#arrow-coral)" />
+
+  <text x="480" y="596" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#695b70">The loop repeats until the agent has enough evidence to write the report.</text>
+</svg>
