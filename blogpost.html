@@ -2,8 +2,9 @@
 
 <p>When we build agents, we often want to give them the ability to browse the web:
 open webpages, navigate from one page to the other, and read the content of a webpage.
-It's now easier than ever to build a web-browsing agent,
-thanks to the combination of a Pydantic-AI agent and the Playwright capability from the Pydantic-AI Harness.
+By combining <a target="_blank" href="https://ai.pydantic.dev/">Pydantic AI</a> with the Playwright capability from
+<a target="_blank" href="https://pydantic.dev/docs/ai/harness/">Pydantic AI Harness</a>,
+we can build agents that browse the web safely and programmatically.
 </p>
 
 <img src="diagram.png" alt="Diagram showing a user asking a Pydantic AI agent to check a website for usability issues. The agent uses a Microsoft Foundry model to choose Playwright MCP tool calls and write the final output. Playwright MCP performs browser actions and returns results to the agent. ">
@@ -14,7 +15,7 @@ thanks to the combination of a Pydantic-AI agent and the Playwright capability f
 It's type-safe and supports OpenTelemetry, making it a great choice for robust production applications.
 </p>
 
-<p>We can use Pydantic-AI with Foundry models using either API keys or Entra token-based authentication.
+<p>We can use Pydantic-AI with <a target="_blank" href="https://learn.microsoft.com/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure">Microsoft Foundry models</a> using either API keys or Entra token-based authentication.
 When possible, we always recommend the keyless route, so that's what we'll demonstrate here.
 </p>
 <p>
@@ -57,9 +58,9 @@ The base URL looks like "https://AZURE_OPENAI_SERVICE_NAME.openai.azure.com/open
 
 <h2>Integrating Playwright MCP capability</h2>
 
-<p>Playwright is a browser automation library. It was originally built for writing E2E tests to verify website correctness,
+<p><a target="_blank" href="https://playwright.dev/">Playwright</a> is a browser automation library. It was originally built for writing E2E tests to verify website correctness,
     and is still the best option for E2E tests today.
-    But when the Playwright MCP server was released, it also became the most common way to give a coding agent access to websites.
+    But when the <a target="_blank" href="https://playwright.dev/docs/getting-started-mcp">Playwright MCP server</a> was released, it also became the most common way to give a coding agent access to websites.
     When you yourself are developing a website, it's a great way to give the agent access to browse the website, do manual QA, and iterate on design improvements.
     We can also use Playwright to access other websites, as long as the website's terms permit programmatic access.
 <p>
@@ -139,7 +140,8 @@ result = await agent.run(
 </p>
 
 <p>Fortunately, we can instrument any Pydantic-AI agent with OpenTelemetry, exporting the traces
-    to any OpenTelemetry-compliant provider, like Pydantic Logfire or Azure App Insights.</p>
+    to any OpenTelemetry-compliant provider, like <a target="_blank" href="https://logfire.pydantic.dev/">Pydantic Logfire</a>
+    or <a target="_blank" href="https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview">Azure App Insights</a>.</p>
 
 <p>Let's step through the code to send traces to Logfire:</p>
 
