@@ -1,9 +1,9 @@
-# Pydantic AI + Playwright MCP
+# Pydantic AI + Playwright
 
 [![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://codespaces.new/pamelafox/pydanticai-playwright-agent)
 [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/pamelafox/pydanticai-playwright-agent)
 
-This project shows you how to build a [Pydantic AI agent](https://pydantic.dev/docs/ai/) using a [Microsoft Foundry model](https://learn.microsoft.com/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure) and the [Playwright MCP server](https://playwright.dev/docs/getting-started-mcp). The example workflow is a website QA analysis agent, but you can customize the code for any browser-using agent scenario.
+This project shows you how to build a [Pydantic AI agent](https://pydantic.dev/docs/ai/) using a [Microsoft Foundry model](https://learn.microsoft.com/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure) and the [Playwright](https://playwright.dev/python/) capability from Pydantic AI Harness. The example workflow is a website QA analysis agent, but you can customize the code for any browser-using agent scenario.
 
 * [Getting started](#getting-started)
   * [GitHub Codespaces](#github-codespaces)
@@ -105,7 +105,7 @@ This project includes infrastructure as code (IaC) to provision an Azure OpenAI 
 ## Running the agent
 
 The [pydanticai_playwright.py](pydanticai_playwright.py) file combines a Pydantic AI `Agent`
-with the `PlaywrightBrowser` MCP capability from the Pydantic AI harness.
+with the `PlaywrightBrowser` capability from the Pydantic AI Harness.
 
 1. Install the Python packages:
 
@@ -182,5 +182,5 @@ Application Insights. Do not commit the connection string or generated trace fil
 
 * [Pydantic AI Documentation](https://ai.pydantic.dev/)
 * [Pydantic AI Harness](https://pydantic.dev/docs/ai/harness/)
-* [Playwright MCP server](https://playwright.dev/docs/getting-started-mcp)
+* [Playwright for Python](https://playwright.dev/python/)
 * [Microsoft Foundry models](https://learn.microsoft.com/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure)

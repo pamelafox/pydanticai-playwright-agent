@@ -7,7 +7,7 @@ By combining <a target="_blank" href="https://ai.pydantic.dev/">Pydantic AI</a> 
 we can build agents that browse the web safely and programmatically.
 </p>
 
-<img src="diagram.png" alt="Diagram showing a user asking a Pydantic AI agent to check a website for usability issues. The agent uses a Microsoft Foundry model to choose Playwright MCP tool calls and write the final output. Playwright MCP performs browser actions and returns results to the agent. ">
+<img src="pydanticai-playwright-agent.svg" alt="Diagram showing a user asking a Pydantic AI agent to check a website for usability issues. The agent uses a Microsoft Foundry model to choose Playwright tool calls and write the final output. Playwright performs browser actions and returns results to the agent. ">
 
 <h2>Using Pydantic-AI with Microsoft Foundry models</h2>
 
@@ -56,11 +56,11 @@ The base URL looks like "https://AZURE_OPENAI_SERVICE_NAME.openai.azure.com/open
     <li><code>model_name</code>: We provide the name of the <em>deployment</em>, not the name of the model. Oftentimes, the deployment name is the same as the model, but not always - it depends on how you set it up in the Portal or infrastructure-as-code files. Notably, when using models on Foundry, you must always make an explicit deployment for the desired model, before you can use it.
 </ul>
 
-<h2>Integrating Playwright MCP capability</h2>
+<h2>Integrating Playwright capability</h2>
 
 <p><a target="_blank" href="https://playwright.dev/">Playwright</a> is a browser automation library. It was originally built for writing E2E tests to verify website correctness,
     and is still the best option for E2E tests today.
-    But when the <a target="_blank" href="https://playwright.dev/docs/getting-started-mcp">Playwright MCP server</a> was released, it also became the most common way to give a coding agent access to websites.
+    Its browser automation capabilities also make it a powerful way to give an agent access to websites.
     When you yourself are developing a website, it's a great way to give the agent access to browse the website, do manual QA, and iterate on design improvements.
     We can also use Playwright to access other websites, as long as the website's terms permit programmatic access.
 <p>
@@ -208,7 +208,7 @@ logfire.configure(
 
 <h2>Accessing authenticated websites</h2>
 
-<p>But wait, what if the target website requires user login? When the Playwright MCP server starts a browser instance, it's completely isolated 
+<p>But wait, what if the target website requires user login? When Playwright starts a browser instance, it's completely isolated
 from your day-to-day browser instance, so it has no access to cookies. Typically, that is a very good thing, since we don't want agents to have
 arbitrary access to our logged in accounts. However, you may be building an agent that is dependent on access to a logged in website.
 </p>

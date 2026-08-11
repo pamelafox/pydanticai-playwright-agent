@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" role="img" aria-labelledby="diagram-title diagram-description" style="font-family: 'Segoe UI', Arial, sans-serif;">
-  <title id="diagram-title">Pydantic AI agent using Playwright MCP tools</title>
-  <desc id="diagram-description">A user sends a website QA request to a Pydantic AI agent. The agent asks an Azure OpenAI model what to do, calls tools exposed by a Playwright MCP server, observes the browser, and loops until it writes a QA report.</desc>
+  <title id="diagram-title">Pydantic AI agent using Playwright tools</title>
+  <desc id="diagram-description">A user sends a website QA request to a Pydantic AI agent. The agent asks an Azure OpenAI model what to do, calls tools provided by the Playwright capability, observes the browser, and loops until it writes a QA report.</desc>
 
   <defs>
     <linearGradient id="agent-fill" x1="0" y1="0" x2="1" y2="1">
@@ -10,6 +10,35 @@
     <linearGradient id="server-fill" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#effcf4" />
       <stop offset="1" stop-color="#d3f5df" />
+    </linearGradient>
+    <linearGradient id="foundry-detail" x1="10.91" y1="13.66" x2="13.62" y2="13.66" gradientTransform="translate(0 20) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#302ec9" />
+      <stop offset=".12" stop-color="#151698" />
+      <stop offset=".25" stop-color="#0a0b7e" />
+      <stop offset=".43" stop-color="#090c7f" />
+      <stop offset=".51" stop-color="#141698" />
+      <stop offset=".61" stop-color="#282ac4" />
+      <stop offset=".77" stop-color="#8e8ff4" />
+      <stop offset=".85" stop-color="#a7a6f7" />
+      <stop offset=".91" stop-color="#cacafb" />
+      <stop offset="1" stop-color="#fff" />
+    </linearGradient>
+    <linearGradient id="foundry-center" x1="12.26" y1="8.32" x2="12.26" y2="18.23" gradientTransform="translate(0 20) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset=".02" stop-color="#201ba6" />
+      <stop offset=".64" stop-color="#2d29c7" />
+      <stop offset="1" stop-color="#201ba6" />
+    </linearGradient>
+    <linearGradient id="foundry-right" x1="14.19" y1="8.27" x2="14.19" y2="14.47" gradientTransform="translate(0 20) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3530c3" />
+      <stop offset=".5" stop-color="#6d71d1" />
+      <stop offset=".97" stop-color="#c0bff5" />
+      <stop offset="1" stop-color="#e3e4ff" />
+    </linearGradient>
+    <linearGradient id="foundry-left" x1="6.51" y1="3" x2="6.51" y2="19.15" gradientTransform="translate(0 20) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#302ec9" />
+      <stop offset=".45" stop-color="#302ec9" />
+      <stop offset=".95" stop-color="#cacafb" />
+      <stop offset="1" stop-color="#7f7eaf" />
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
       <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#20152f" flood-opacity="0.14" />
@@ -24,7 +53,7 @@
 
   <rect width="960" height="620" rx="24" fill="#ffffff" />
   <path d="M0 112 H960" stroke="#e6eaf2" stroke-width="2" />
-  <text x="56" y="66" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#20152f">Pydantic AI + Playwright MCP</text>
+  <text x="56" y="66" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#20152f">Pydantic AI + Playwright</text>
   <text x="58" y="94" font-family="Arial, sans-serif" font-size="17" fill="#695b70">An agent turns a website QA request into safe browser actions and a report.</text>
 
   <!-- User request -->
@@ -45,17 +74,22 @@
 
   <!-- Model inside the agent -->
   <rect x="328" y="275" width="264" height="102" rx="12" fill="#f4f1ff" stroke="#a99be8" stroke-width="3" />
-  <image href="AI-Foundry.svg" x="350" y="287" width="24" height="24" preserveAspectRatio="xMidYMid meet" />
+  <g transform="translate(350 287) scale(1.333333)">
+    <path d="M11.96,11.68s.07-.1.07-.24v-3.87c0-.85.66-1.76,1.59-2.03-.06-.19-.64-2.11-.81-2.65-.17-.56-.67-1.9-1.29-1.9,0,0,0,0-.01,0h0s-.09.05-.13.13c-.32.58-.46,3.02-.46,4.84v2.26c.27.97.91,3.22.96,3.35,0,0,.05.1.09.1h0Z" fill="url(#foundry-detail)" />
+    <path d="M11.96,11.68s.07-.1.07-.24v-3.87c0-.85.66-1.76,1.59-2.03-.06-.19-.64-2.11-.81-2.65-.17-.56-.67-1.9-1.29-1.9,0,0,0,0-.01,0h0s-.09.05-.13.13c-.32.58-.46,3.02-.46,4.84v2.26c.27.97.91,3.22.96,3.35,0,0,.05.1.09.1h0Z" fill="url(#foundry-center)" />
+    <path d="M16.01,5.46h-1.81c-1.21,0-2.17,1.09-2.17,2.11v3.87c0,.14-.04.24-.07.24s-.09-.1-.09-.1c0,0,.07.21.17.21h1.98c.62,0,2.48-.61,2.48-2.52v-3.25c0-.41-.24-.55-.49-.55Z" fill="url(#foundry-right)" />
+    <path d="M2.34,17h5.38c2.35,0,3.2-2.03,3.2-3.81v-7.23c0-2.08.19-4.97.61-4.97h-3.23c-.77,0-1.43.82-2.18,2.48-.75,1.66-4.36,11.87-4.52,12.36-.26.79-.02,1.16.74,1.16Z" fill="url(#foundry-left)" />
+  </g>
   <text x="384" y="308" font-family="Aptos, Arial, sans-serif" font-size="16" font-weight="700" fill="#20152f">Microsoft Foundry Model</text>
   <text x="460" y="336" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#695b70">chooses the next tool call</text>
   <text x="460" y="359" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#695b70">writes the final output</text>
 
-  <!-- MCP server -->
+  <!-- Playwright capability -->
   <g filter="url(#shadow)">
     <rect x="690" y="164" width="220" height="138" rx="16" fill="url(#server-fill)" stroke="#2ead66" stroke-width="3" />
   </g>
   <image href="https://playwright.dev/img/playwright-logo.svg" x="700" y="177" width="32" height="32" preserveAspectRatio="xMidYMid meet" />
-  <text x="740" y="200" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#20152f">Playwright MCP</text>
+  <text x="740" y="200" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#20152f">Playwright</text>
   <line x1="730" y1="217" x2="870" y2="217" stroke="#8ed8ab" stroke-width="2" />
   <text x="800" y="247" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#326149">snapshot · click · scroll</text>
   <text x="800" y="279" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#326149">navigate · get text · wait</text>
