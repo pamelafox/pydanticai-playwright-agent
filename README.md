@@ -171,6 +171,8 @@ OpenTelemetry tracing is written locally by default.
 
 If `LOGFIRE_TOKEN` is present, the example also sends traces to Logfire; otherwise no Logfire cloud export is attempted.
 
+![Logfire trace view showing the Pydantic AI agent run and Playwright browser calls](screenshot_logfire.png)
+
 ### Azure Application Insights configuration
 
 If `APPLICATIONINSIGHTS_CONNECTION_STRING` is present, the example also sends traces to Azure
@@ -179,3 +181,6 @@ Application Insights. Do not commit the connection string or generated trace fil
 ## Resources
 
 * [Pydantic AI Documentation](https://ai.pydantic.dev/)
+* [Pydantic AI Harness](https://pydantic.dev/docs/ai/harness/)
+* [Playwright MCP server](https://playwright.dev/docs/getting-started-mcp)
+* [Microsoft Foundry models](https://learn.microsoft.com/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure)
