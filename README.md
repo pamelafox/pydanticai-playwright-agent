@@ -147,7 +147,7 @@ content, so treat it as sensitive local data.
 
 ### Authentication
 
-If your website requires authentication, you will first need to save a Playwright storage state JSON with the cookies for that website.
+If your website requires authentication, you will first need to save a Playwright storage state JSON with the cookies for that website. The script reads that file and passes the parsed state to `PlaywrightBrowser(storage_state=...)`, which takes the state itself rather than a path, so the browser never has to read your filesystem.
 
 Create the storage state for the target website:
 
@@ -172,6 +172,11 @@ OpenTelemetry tracing is written locally by default.
 ### Logfire configuration
 
 If `LOGFIRE_TOKEN` is present, the example also sends traces to Logfire; otherwise no Logfire cloud export is attempted.
+
+Logfire redacts attribute values that match its default patterns, and page text matches them often
+enough that browser tool results come back as `[Scrubbed due to 'cookie']`. The example keeps tool
+results readable with a `ScrubbingOptions` callback, so treat the traces as page content: they hold
+whatever the browsed site returned.
 
 ![Logfire trace view showing the Pydantic AI agent run and Playwright browser calls](readme_logfire.png)
 

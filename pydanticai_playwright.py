@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+import json
 import os
 from pathlib import Path
 from typing import TextIO
@@ -39,6 +40,11 @@ for clicks, use wait_for() after clicks, and scroll("down") to inspect content b
 get_text(selector=...) to narrow large pages. Avoid execute_js and screenshots unless an accessibility
 snapshot cannot expose required information. Use browser tools strictly one at a time.
 
+After loading a page and after interactions, call console_messages(errors_only=True) and
+network_requests(errors_only=True): JavaScript errors and failed requests are findings in their own
+right, and they explain behavior the rendered page does not. Use press_key() with Tab, Enter, or
+Escape where focus order, submission, or dismissal is part of the journey being tested.
+
 Never submit forms or click controls that register, RSVP, join, buy, publish, delete, send, message,
 change account settings, or otherwise cause side effects. Do not enter credentials or personal data.
 Do not leave the configured domain. If an action times out, snapshot() the current page once and
@@ -49,7 +55,8 @@ every finding. A suspected issue must include expected behavior, actual behavior
 high, medium, or low), and supporting evidence. Do not call something a bug merely because a design
 choice is unfamiliar. Record useful passes as well as failures, and report areas you could not test.
 
-Write the final report to outputs/qa-report.md. It must contain the tested URL, date, session/auth
+Write the final report to qa-report.md with write_file. The filesystem tools are rooted at the
+outputs directory, so paths are relative to it. The report must contain the tested URL, date, session/auth
 mode (without secrets), a concise test plan, an executive summary, a findings table, detailed
 reproduction steps for each finding, tested journeys and passes, and limitations. Do not claim
 coverage beyond what you actually inspected. Before finishing, inspect the written report for
@@ -67,6 +74,13 @@ def _artifact_state() -> dict[str, tuple[int, int]]:
     }
 
 
+def _keep_tool_results(match: logfire.ScrubMatch) -> str | None:
+    """Keep tool results unredacted: page text matches Logfire's default patterns often."""
+    if match.path[:2] in {("attributes", "gen_ai.tool.call.result"), ("attributes", "tool_response")}:
+        return match.value
+    return None
+
+
 def _configure_tracing(trace_file: TextIO) -> logfire.Logfire:
     span_processors = [SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file))]
     connection_string = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
@@ -79,17 +93,22 @@ def _configure_tracing(trace_file: TextIO) -> logfire.Logfire:
         token=os.getenv("LOGFIRE_TOKEN"),
         service_name="pydanticai-playwright-qa",
         console=logfire.ConsoleOptions(),
+        scrubbing=logfire.ScrubbingOptions(callback=_keep_tool_results),
         additional_span_processors=span_processors,
     )
 
-async def run_qa(url: str, storage_state: str | None = None) -> str:
+async def run_qa(url: str, session_state_path: str | None = None) -> str:
     """Run a read-only QA pass against one operator-supplied site."""
     parsed_url = urlparse(url)
     if parsed_url.scheme not in {"http", "https"} or not parsed_url.hostname:
         raise ValueError("URL must be an absolute http:// or https:// URL.")
     website_hostname = parsed_url.hostname
-    if storage_state and not Path(storage_state).is_file():
-        raise ValueError(f"Session state file does not exist: {storage_state}")
+    storage_state = None
+    if session_state_path:
+        state_file = Path(session_state_path)
+        if not state_file.is_file():
+            raise ValueError(f"Session state file does not exist: {session_state_path}")
+        storage_state = json.loads(state_file.read_text(encoding="utf-8"))
     if not os.getenv("AZURE_OPENAI_ENDPOINT") or not os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT"):
         raise RuntimeError("Set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_CHAT_DEPLOYMENT before running.")
 
@@ -114,7 +133,8 @@ async def run_qa(url: str, storage_state: str | None = None) -> str:
             block_private_addresses=True,
             screenshot_on_navigate=False,
             max_content_tokens=30000,
-            timeout_ms=30_000,
+            action_timeout_ms=5_000,
+            navigation_timeout_ms=30_000,
             auto_install_chromium=False,
             storage_state=storage_state,
         )
@@ -128,7 +148,7 @@ async def run_qa(url: str, storage_state: str | None = None) -> str:
         result = await agent.run(
             f"Perform a manual QA pass on {url}. Load this URL first, make a testing plan, and investigate "
             "the highest-value usability risks and functional bugs you can safely reproduce. "
-            "Write the required report to outputs/qa-report.md.",
+            "Write the required report to qa-report.md.",
         )
         after = _artifact_state()
         changed = sorted(path for path, state in after.items() if before.get(path) != state)

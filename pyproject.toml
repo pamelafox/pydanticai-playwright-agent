@@ -9,7 +9,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pydantic-ai>=2.18.0",
     "logfire>=4.32.0",
-    "pydantic-ai-harness[playwright] @ git+https://github.com/pydantic/pydantic-ai-harness.git@730130f3322936f0396afa933b2f4184fc0028bf",
+    "pydantic-ai-harness[playwright] @ git+https://github.com/pydantic/pydantic-ai-harness.git@05840b44fef0af181c1450e53760bfe5f41b4445",
 ]
 
 [tool.uv]

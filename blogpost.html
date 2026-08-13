@@ -76,7 +76,8 @@ browser = PlaywrightBrowser(
     block_private_addresses=True,
     headless=False,
     max_content_tokens=30000,
-    timeout_ms=30_000,
+    action_timeout_ms=5_000,
+    navigation_timeout_ms=30_000,
     screenshot_on_navigate=False,
     auto_install_chromium=False,
 )
@@ -96,8 +97,11 @@ browser = PlaywrightBrowser(
     This defaults to 4000 tokens, so I increased it to 30,000 tokens to allow for longer webpages.
     Keep in mind that the amount of content returned will increase the usage of the context window,
     affecting both performance and latency of subsequent LLM calls.
-    <li><code>timeout_ms</code>: Sets the default timeout for navigation and browser actions to 30 seconds (the default value).
-        You may want to increase for websites with slow-responding interfaces, or decrease for more efficient agentic navigation.
+    <li><code>action_timeout_ms</code> and <code>navigation_timeout_ms</code>: Actions like clicking or typing
+        and page navigations get separate deadlines, since they fail for different reasons.
+        A click on a selector that does not exist should fail fast, so the action deadline defaults to 5 seconds,
+        while a page load deserves more room; here I allow 30 seconds for navigation.
+        A tool call can also pass its own <code>timeout_ms</code> when the agent knows a step is slow.
     <li><code>screenshot_on_navigate</code>: Controls whether Playwright takes a screenshot after every navigation and attaches to the agent session.
         This defaults to <code>False</code>, since screenshots can bloat the context window, but you may want to enable it for
         more design-heavy workflows or for human auditing purposes.
@@ -152,6 +156,7 @@ configured_logfire = logfire.configure(
     token=os.getenv("LOGFIRE_TOKEN"),
     service_name="pydanticai-playwright-qa",
     console=logfire.ConsoleOptions(),
+    scrubbing=logfire.ScrubbingOptions(callback=keep_tool_results),
     additional_span_processors=[SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file))],
 )
 </pre>
@@ -164,6 +169,21 @@ and the local traces file can be useful input for coding agents debugging an age
 By pointing an agent at the traces file, it can audit the Playwright browser calls
 and recommend improvements to the prompt and parameters.
 <p>
+
+<p>The <code>scrubbing</code> option is there because of what a browsing agent puts in its traces.
+Logfire redacts attribute values matching patterns like <code>cookie</code>, <code>session</code> and <code>auth</code>,
+and ordinary webpage text hits those often, so browser tool results arrive as <code>[Scrubbed due to 'cookie']</code>
+and the trace stops being useful for seeing what the agent read. The callback keeps tool results intact:</p>
+
+<pre>
+def keep_tool_results(match: logfire.ScrubMatch) -> str | None:
+    if match.path[:2] == ("attributes", "gen_ai.tool.call.result"):
+        return match.value
+    return None
+</pre>
+
+<p>Returning <code>match.value</code> keeps the original text, and returning <code>None</code> leaves the redaction in place.
+The traces then contain whatever the browsed pages returned, so store them like the page content they are.</p>
 
 <p>Next, we set up instrumentation specific to the packages we're using:
 </p>
@@ -213,12 +233,13 @@ from your day-to-day browser instance, so it has no access to cookies. Typically
 arbitrary access to our logged in accounts. However, you may be building an agent that is dependent on access to a logged in website.
 </p>
 <p>
-In that case, we can explicitly pass a session state to the <code>PlaywrightBrowser</code> instance, and it will use the cookies and local storage from that state:
+In that case, we can explicitly pass a session state to the <code>PlaywrightBrowser</code> instance, and it will use the cookies and local storage from that state.
+The capability takes the state itself, not a path to it, so loading it stays in our own code and the browser never reads our filesystem:
 </p>
 
 <pre>
 browser = PlaywrightBrowser(
-    storage_state="playwright/.auth/site.json"
+    storage_state=json.loads(Path("playwright/.auth/site.json").read_text())
 )
 </pre>
 
