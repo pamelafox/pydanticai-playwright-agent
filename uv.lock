@@ -1492,8 +1492,8 @@ wheels = [
 
 [[package]]
 name = "pydantic-ai-harness"
-version = "0.19.1.dev47+05840b4"
-source = { git = "https://github.com/pydantic/pydantic-ai-harness.git?rev=05840b44fef0af181c1450e53760bfe5f41b4445#05840b44fef0af181c1450e53760bfe5f41b4445" }
+version = "0.19.1.dev50+d6d7178"
+source = { git = "https://github.com/pydantic/pydantic-ai-harness.git?rev=d6d7178#d6d71786776fc03159df63afbbb3e467344780be" }
 dependencies = [
     { name = "genai-prices" },
     { name = "httpx" },
@@ -1748,7 +1748,7 @@ requires-dist = [
     { name = "logfire", specifier = ">=4.32.0" },
     { name = "openai", specifier = ">=1.109.1" },
     { name = "pydantic-ai", specifier = ">=2.18.0" },
-    { name = "pydantic-ai-harness", extras = ["playwright"], git = "https://github.com/pydantic/pydantic-ai-harness.git?rev=05840b44fef0af181c1450e53760bfe5f41b4445" },
+    { name = "pydantic-ai-harness", extras = ["playwright"], git = "https://github.com/pydantic/pydantic-ai-harness.git?rev=d6d7178" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
 ]
 
