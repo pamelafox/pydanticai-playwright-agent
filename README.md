@@ -175,8 +175,11 @@ If `LOGFIRE_TOKEN` is present, the example also sends traces to Logfire; otherwi
 
 Logfire redacts attribute values that match its default patterns, and page text matches them often
 enough that browser tool results come back as `[Scrubbed due to 'cookie']`. The example keeps tool
-results readable with a `ScrubbingOptions` callback, so treat the traces as page content: they hold
-whatever the browsed site returned.
+results readable with a `ScrubbingOptions` callback. The callback sees the attribute, not the tool
+that produced it, so it cannot be scoped to the browser; it narrows on the word that triggered the
+redaction instead, keeping `password`, `api_key`, `jwt` and the rest redacted whichever tool
+returned them. Treat the traces as page content either way: they hold whatever the browsed site
+returned.
 
 ![Logfire trace view showing the Pydantic AI agent run and Playwright browser calls](readme_logfire.png)
 

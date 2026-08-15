@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import os
+import re
 from pathlib import Path
 from typing import TextIO
 from urllib.parse import urlparse
@@ -74,11 +75,22 @@ def _artifact_state() -> dict[str, tuple[int, int]]:
     }
 
 
+# Words Logfire redacts on that are ordinary vocabulary on a public web page: a
+# conference agenda is full of "session", a pricing page of "credit card".
+PAGE_WORDS = {"session", "cookie", "credit card", "auth"}
+
+
 def _keep_tool_results(match: logfire.ScrubMatch) -> str | None:
-    """Keep tool results unredacted: page text matches Logfire's default patterns often."""
-    if match.path[:2] in {("attributes", "gen_ai.tool.call.result"), ("attributes", "tool_response")}:
-        return match.value
-    return None
+    """Keep a tool result readable when the word that triggered redaction is page vocabulary.
+
+    The callback sees the attribute, not the tool that produced it, so this cannot be
+    scoped to the browser. Narrowing on the matched word instead means "password",
+    "api_key", "jwt" and the rest stay redacted whichever tool returned them.
+    """
+    if match.path[:2] not in {("attributes", "gen_ai.tool.call.result"), ("attributes", "tool_response")}:
+        return None
+    matched = re.sub(r"[._\- ]+", " ", match.pattern_match.group(0)).strip().lower()
+    return match.value if matched in PAGE_WORDS else None
 
 
 def _configure_tracing(trace_file: TextIO) -> logfire.Logfire:
