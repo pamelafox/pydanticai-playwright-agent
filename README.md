@@ -134,9 +134,18 @@ with the `PlaywrightBrowser` capability from the Pydantic AI Harness.
 
 The starting URL controls which site the browser can visit. In `pydanticai_playwright.py`,
 `urlparse()` extracts its hostname into `website_hostname` and passes it to
-`PlaywrightBrowser(allowed_domains=[website_hostname])`.
-The browser also uses `block_private_addresses=True` to reject private network addresses. The
-allowlist is set by the code before the agent runs; the model and the webpage cannot add domains.
+`PlaywrightBrowser(allowed_domains=[website_hostname])`. Each allowlist entry matches its exact
+host and its subdomains. The browser also uses `block_private_addresses=True` to refuse navigation
+to private, loopback, link-local, and other reserved IP literals, including the cloud metadata
+endpoint, RFC 1918 ranges, and `localhost` names. The two policies are independent: an allowlisted
+private address is still refused unless private-address blocking is disabled.
+
+The allowlist governs top-level navigation, while private-address blocking applies to every frame.
+Neither policy is a general security boundary: private-address blocking matches IP literals and
+`localhost` names but does not resolve hostnames, and neither policy controls requests initiated by
+in-page JavaScript (`fetch`/XHR) or WebSockets. For untrusted-input scenarios, run the browser in
+a container or VM with an egress firewall, or front it with a proxy. Treat these controls as
+defense in depth, not a guarantee.
 
 ### Outputs
 
