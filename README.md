@@ -173,13 +173,11 @@ OpenTelemetry tracing is written locally by default.
 
 If `LOGFIRE_TOKEN` is present, the example also sends traces to Logfire; otherwise no Logfire cloud export is attempted.
 
-Logfire redacts attribute values that match its default patterns, and page text matches them often
-enough that browser tool results come back as `[Scrubbed due to 'cookie']`. The example keeps tool
-results readable with a `ScrubbingOptions` callback. The callback sees the attribute, not the tool
-that produced it, so it cannot be scoped to the browser; it narrows on the word that triggered the
-redaction instead, keeping `password`, `api_key`, `jwt` and the rest redacted whichever tool
-returned them. Treat the traces as page content either way: they hold whatever the browsed site
-returned.
+Expect some browser tool results to arrive as `[Scrubbed due to 'cookie']`. Logfire redacts
+attribute values matching its [default patterns](https://github.com/pydantic/logfire/blob/main/logfire/_internal/scrubbing.py#L38),
+and page text hits them often: a conference agenda is full of "session", a pricing page of
+"credit card". Treat the traces as page content either way, since they hold whatever the browsed
+site returned.
 
 ![Logfire trace view showing the Pydantic AI agent run and Playwright browser calls](readme_logfire.png)
 

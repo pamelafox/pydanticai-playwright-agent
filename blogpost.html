@@ -156,7 +156,6 @@ configured_logfire = logfire.configure(
     token=os.getenv("LOGFIRE_TOKEN"),
     service_name="pydanticai-playwright-qa",
     console=logfire.ConsoleOptions(),
-    scrubbing=logfire.ScrubbingOptions(callback=keep_tool_results),
     additional_span_processors=[SimpleSpanProcessor(ConsoleSpanExporter(out=trace_file))],
 )
 </pre>
@@ -170,26 +169,11 @@ By pointing an agent at the traces file, it can audit the Playwright browser cal
 and recommend improvements to the prompt and parameters.
 <p>
 
-<p>The <code>scrubbing</code> option is there because of what a browsing agent puts in its traces.
-Logfire redacts attribute values matching patterns like <code>cookie</code>, <code>session</code> and <code>auth</code>,
-and ordinary webpage text hits those often, so browser tool results arrive as <code>[Scrubbed due to 'cookie']</code>
-and the trace stops being useful for seeing what the agent read. The callback keeps tool results intact:</p>
-
-<pre>
-PAGE_WORDS = {"session", "cookie", "credit card", "auth"}
-
-def keep_tool_results(match: logfire.ScrubMatch) -> str | None:
-    if match.path[:2] != ("attributes", "gen_ai.tool.call.result"):
-        return None
-    matched = re.sub(r"[._\- ]+", " ", match.pattern_match.group(0)).strip().lower()
-    return match.value if matched in PAGE_WORDS else None
-</pre>
-
-<p>Returning <code>match.value</code> keeps the original text, and returning <code>None</code> leaves the redaction in place.
-The callback is given the attribute, not the tool that produced it, so it cannot be limited to the browser's results;
-narrowing on the word that triggered the redaction is the next best thing, and keeps
-<code>password</code>, <code>api_key</code> or <code>jwt</code> redacted whichever tool returned them.
-The traces then contain whatever the browsed pages returned, so store them like the page content they are.</p>
+<p>One thing to expect from a browsing agent's traces: some tool results arrive as
+<code>[Scrubbed due to 'cookie']</code>. Logfire redacts attribute values matching its
+<a target="_blank" href="https://github.com/pydantic/logfire/blob/main/logfire/_internal/scrubbing.py#L38">default patterns</a>,
+and ordinary webpage text hits those often. The traces also contain whatever the browsed pages returned,
+so store them like the page content they are.</p>
 
 <p>Next, we set up instrumentation specific to the packages we're using:
 </p>
