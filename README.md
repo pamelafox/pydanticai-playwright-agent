@@ -19,6 +19,7 @@ This project shows you how to build a [Pydantic AI agent](https://pydantic.dev/d
 * [OpenTelemetry](#opentelemetry)
   * [Logfire configuration](#logfire-configuration)
   * [Azure Application Insights configuration](#azure-application-insights-configuration)
+* [Troubleshooting](#troubleshooting)
 * [Resources](#resources)
 
 ## Getting started
@@ -118,7 +119,7 @@ with the `PlaywrightBrowser` capability from the Pydantic AI Harness.
 2. Download the Chromium browser used by Playwright:
 
     ```shell
-    uv run playwright install chromium
+    uv run playwright install --with-deps chromium
     ```
 
 3. Run the agent:
@@ -194,6 +195,12 @@ site returned.
 
 If `APPLICATIONINSIGHTS_CONNECTION_STRING` is present, the example also sends traces to Azure
 Application Insights. Do not commit the connection string or generated trace files.
+
+## Troubleshooting
+
+The agent runs Chromium headlessly, which works in Codespaces and other environments without a display. On a local desktop, set `headless` to `False` in `pydanticai_playwright.py` when a visible browser is needed.
+
+Chromium's renderer sandbox is enabled by default. In restricted containers such as Codespaces, set `chromium_sandbox` to `False` in `pydanticai_playwright.py`.
 
 ## Resources
 

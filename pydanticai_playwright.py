@@ -95,6 +95,9 @@ async def run_qa(url: str, session_state_path: str | None = None) -> str:
     if parsed_url.scheme not in {"http", "https"} or not parsed_url.hostname:
         raise ValueError("URL must be an absolute http:// or https:// URL.")
     website_hostname = parsed_url.hostname
+    allowed_domains = [website_hostname]
+    if website_hostname.startswith("www."):
+        allowed_domains.append(website_hostname[4:])
     storage_state = None
     if session_state_path:
         state_file = Path(session_state_path)
@@ -120,9 +123,12 @@ async def run_qa(url: str, session_state_path: str | None = None) -> str:
             provider=OpenAIProvider(openai_client=client),
         )
         browser = PlaywrightBrowser(
-            headless=False,
-            allowed_domains=[website_hostname],
+            # Set this to False on a local desktop when a visible browser is needed.
+            headless=True,
+            allowed_domains=allowed_domains,
             block_private_addresses=True,
+            # Set this to False in restricted containers such as GitHub Codespaces.
+            chromium_sandbox=True,
             screenshot_on_navigate=False,
             max_content_tokens=30000,
             action_timeout_ms=5_000,

@@ -21,6 +21,6 @@
             ]
         }
     },
-    "postCreateCommand": "uv sync",
+    "postCreateCommand": "uv sync && uv run playwright install --with-deps chromium",
     "remoteUser": "vscode"
 }
